@@ -66,13 +66,12 @@ def SA(F, x0, t0, dx, alpha, n1, n2):
 
     return sols, bests
 
-sol, best = SA(func1, x0, t0, dx, alpha, n1, n2)
-
 def plotter(F, sol, best):
-    plt.plot(sol, [F(y) for y in sol], c = 'gray')
-    plt.scatter(best, [F(y) for y in best], c = 'black')
+    #plt.plot(sol, [F(y) for y in sol], c = 'gray')
+    #plt.scatter(best, [F(y) for y in best], c = 'black')
     plt.scatter([x0, best[-1], sol[-1]],[F(x0),F(best[-1]),F(sol[-1])], c = ['b','r','g'])
 # Verde é o ultimo ponto visitado
 # Vermelho é o melhor ponto encontrado
 
+sol, best = SA(func1, x0, t0, dx, alpha, n1, n2)
 plotter(func1, sol, best)
