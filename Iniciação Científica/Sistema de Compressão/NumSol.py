@@ -53,8 +53,6 @@ class Simulation:
             
             ode = {'x': x, 'ode': rhs, 'p': alpha}
 
-            tf = self.dt  # Tempo final
-
             F = ca.integrator('F', 'idas', ode, self.interval[0][0],self.dt)
 
             for j in range(self.nData):
