@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import time
 
 
 class MyModel(nn.Module):
@@ -83,27 +84,29 @@ class MyModel(nn.Module):
             print(f"Epoch [{epoch+1}/{epochs}], Loss: {total_loss / len(train_loader)}")
             
     def test_model(self, x_test, interval, model):
+        model.eval()
         massFlowrate100 = [x_test[0, 0, 0].item(), x_test[0, 1, 0].item(), x_test[0, 2, 0].item()]
         PlenumPressure100 = [x_test[0, 0, 1].item(), x_test[0, 1, 1].item(), x_test[0, 2, 1].item()]
 
-        # Loop para fazer previsões
+        # Preparar o tensor inicial fora do loop
+        input_tensor = torch.zeros((1, 3, 3), dtype=torch.float32)
+
+        # Loop de previsões
+        tm1 = time.time()
         for i in range(len(interval)):
-            # Criação do tensor de entrada
-            inputs = torch.tensor([[
-                [massFlowrate100[-3], PlenumPressure100[-3], x_test[i, 0, 2].item()],
-                [massFlowrate100[-2], PlenumPressure100[-2], x_test[i, 1, 2].item()],
-                [massFlowrate100[-1], PlenumPressure100[-1], x_test[i, 2, 2].item()]
-            ]], dtype=torch.float32)
-            # Desabilitar o cálculo de gradientes
+            # Atualizar os valores do tensor diretamente
+            input_tensor[0, :, 0] = torch.tensor(massFlowrate100[-3:])
+            input_tensor[0, :, 1] = torch.tensor(PlenumPressure100[-3:])
+            input_tensor[0, :, 2] = x_test[i, :, 2]
+
+            # Previsão com desativação do gradiente
             with torch.no_grad():
-                prediction100 = model(inputs)  # Chamar o modelo diretamente para previsões
+                prediction100 = model(input_tensor)
 
-            # Armazenar as previsões
-            massFlowrate100.append(prediction100[0, 0, 0].item())  # Converte tensor para valor escalar  
+            # Adicionar previsões diretamente
+            massFlowrate100.append(prediction100[0, 0, 0].item())
             PlenumPressure100.append(prediction100[0, 0, 1].item())
-        return massFlowrate100,PlenumPressure100
-
-
-
-
-
+        tm2 = time.time()
+        timeteste = tm2 - tm1
+        model.train()
+        return massFlowrate100, PlenumPressure100, timeteste

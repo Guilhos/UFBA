@@ -16,13 +16,6 @@ class DataInterpolator:
         """Carrega os dados do arquivo CSV, organiza as colunas e amostra 1% dos dados aleatoriamente."""
         self.data = pd.read_csv(self.file_path, decimal=self.decimal)
         self.data.columns = self.data.columns.str.replace(',', '.').astype(float)
-        
-        '''Descomente essa parte para dar uma função quebrada, lembre de substituir o self.data por sampled_data'''
-        # # Amostragem de 1% dos dados aleatoriamente
-        # num_rows = self.data.shape[0]
-        # sample_size = max(5, int(num_rows * perc))  # Garantir pelo menos 5 linhas
-        # sampled_indices = np.random.choice(num_rows, sample_size, replace=False)
-        # sampled_data = self.data.iloc[sampled_indices]
 
         # Transpor para garantir que cada coluna represente uma amostra
         self.X_sample = np.sort(self.data.columns.values)
@@ -57,7 +50,7 @@ class DataInterpolator:
 
         # Dados Originais (Amostra)
         X_grid, Y_grid = np.meshgrid(self.X_sample, self.Y_sample)
-        ax1.plot_surface(X_grid, Y_grid, self.Z_sample, cmap='viridis', edgecolor='k')
+        ax1.scatter(X_grid, Y_grid, self.Z_sample, cmap='viridis', edgecolor='k')
         ax1.set_title("Dados Originais (Amostra)")
         ax1.set_xlabel("X")
         ax1.set_ylabel("Y")
