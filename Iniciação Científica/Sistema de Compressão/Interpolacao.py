@@ -17,10 +17,8 @@ class DataInterpolatorCasadi:
         self.data.columns = self.data.columns.str.replace(',', '.').astype(float)
 
         # Transpor para garantir que cada coluna represente uma amostra
-        self.X_sample = np.arange(len(self.data))
-        print(self.X_sample)
-        self.Y_sample = np.sort(self.data.columns.values)
-        print(self.Y_sample)
+        self.X_sample = np.arange(len(self.data)) # Vai de 0 até 39, Shape: (40,)
+        self.Y_sample = np.sort(self.data.columns.values) # Vai de -2.80 até 1.11, Shape: (181,)
         self.Z_sample = self.data.values
         print("Dados carregados e amostrados aleatoriamente com sucesso.")
         print("Dimensão de X_sample:", self.X_sample.shape)
@@ -50,21 +48,21 @@ class DataInterpolatorCasadi:
         fig, (ax1, ax2) = plt.subplots(1, 2, subplot_kw={'projection': '3d'}, figsize=(12, 6))
 
         # Dados Originais (Amostra)
-        X_grid, Y_grid = np.meshgrid(self.Y_sample, self.X_sample)
+        X_grid, Y_grid = np.meshgrid(self.Y_sample, self.X_sample) # EU REALMENTE NAO SEI COMO EU ENTRO COM 181,40 E O MESHGRID SAI COMO 40,181
         print(X_grid.shape,Y_grid.shape)
         ax1.scatter(X_grid, Y_grid, self.Z_sample,c=self.Z_sample.ravel(), cmap='viridis', edgecolor='k')
         ax1.set_title("Dados Originais (Amostra)")
-        ax1.set_xlabel("X")
-        ax1.set_ylabel("Y")
-        ax1.set_zlabel("Z")
+        ax1.set_xlabel("N")
+        ax1.set_ylabel("Vazão")
+        ax1.set_zlabel("Phi")
 
         # Superfície Interpolada
         X_dense_grid, Y_dense_grid = np.meshgrid(Y_dense, X_dense)
         ax2.plot_surface(X_dense_grid, Y_dense_grid, Z_dense, cmap='viridis')
         ax2.set_title("Superfície Interpolada (CasADi)")
-        ax2.set_xlabel("X")
-        ax2.set_ylabel("Y")
-        ax2.set_zlabel("Z")
+        ax2.set_xlabel("N")
+        ax2.set_ylabel("Vazão")
+        ax2.set_zlabel("Phi")
 
         ax2.scatter(y_test,x_test,z_interpolado, c = 'black')
 
@@ -79,8 +77,9 @@ if __name__ == "__main__":
     X_dense, Y_dense, Z_dense, interpolant_func = interpol.interpolate(num_points=100)
 
     # Testa a função de interpolação
-    x_test = 25  # Exemplo de ponto
-    y_test = 1  # Exemplo de ponto
+    x_test = 25  # Exemplo de ponto PODE IR DE 0 A 39, acho que X é provavelmente a massa
+    y_test = 1  # Exemplo de ponto PODE IR DE -3 ATE 1.11, y deve ser o N
+    # EU REALMENTE NAO SEI COMO AS COORDENADAS ESTAO FUNCIONANDO NA HORA DE PLOTAR, MAS FUNCIONAM, NAO ME PERGUNTE
     z_interpolado = interpolant_func([x_test, y_test])
     print(f"Valor interpolado em (x={x_test}, y={y_test}):", z_interpolado)
 
