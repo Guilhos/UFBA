@@ -31,9 +31,9 @@ class DataInterpolatorCasadi:
         x_dense = np.linspace(self.X_sample.min(), self.X_sample.max(), num_points)
         y_dense = np.linspace(self.Y_sample.min(), self.Y_sample.max(), num_points)
         z_flat = self.Z_sample.ravel(order='F')
-        
+
         lut = ca.interpolant('name','bspline',[self.X_sample, self.Y_sample],z_flat)
-        
+
         # Calcular a malha de Z usando os pontos interpolados
         Z_dense = np.zeros((num_points, num_points))
         for i, x in enumerate(x_dense):
@@ -41,9 +41,9 @@ class DataInterpolatorCasadi:
                 Z_dense[i, j] = lut([x, y])
 
         print("Dimensão de Z_dense:", Z_dense.shape)
-        return x_dense, y_dense, Z_dense
+        return x_dense, y_dense, Z_dense, lut
 
-    def plot_results(self, X_dense, Y_dense, Z_dense):
+    def plot_results(self, X_dense, Y_dense, Z_dense,x_test,y_test,z_interpolado):
         """Plota os resultados da interpolação e da amostra original."""
         fig, (ax1, ax2) = plt.subplots(1, 2, subplot_kw={'projection': '3d'}, figsize=(12, 6))
 
@@ -63,11 +63,22 @@ class DataInterpolatorCasadi:
         ax2.set_ylabel("Y")
         ax2.set_zlabel("Z")
 
+        ax2.scatter(x_test,y_test,z_interpolado, c = 'black')
+
         plt.show()
 
 # Exemplo de uso
 if __name__ == "__main__":
     interpol = DataInterpolatorCasadi('E:/Faculdade/UFBA/UFBA/Iniciação Científica/Sistema de Compressão/tabela_phi.csv')
     interpol.load_data(0.5)
-    X_dense, Y_dense, Z_dense = interpol.interpolate(num_points=100)
-    interpol.plot_results(X_dense,Y_dense,Z_dense)
+
+    # Cria a função de interpolação
+    X_dense, Y_dense, Z_dense, interpolant_func = interpol.interpolate(num_points=100)
+
+    # Testa a função de interpolação
+    y_test = 30  # Exemplo de ponto
+    x_test = 1  # Exemplo de ponto
+    z_interpolado = interpolant_func([x_test, y_test])
+    print(f"Valor interpolado em (x={x_test}, y={y_test}):", z_interpolado)
+
+    interpol.plot_results(X_dense, Y_dense, Z_dense,x_test,y_test,z_interpolado)
