@@ -32,7 +32,7 @@ class DataInterpolatorCasadi:
         y_dense = np.linspace(self.Y_sample.min(), self.Y_sample.max(), num_points)
         z_flat = self.Z_sample.ravel(order='F')
 
-        lut = ca.interpolant('name','bspline',[self.X_sample, self.Y_sample],z_flat)
+        lut = ca.interpolant('i','bspline',[self.X_sample, self.Y_sample],z_flat)
 
         # Calcular a malha de Z usando os pontos interpolados
         Z_dense = np.zeros((num_points, num_points))
@@ -76,9 +76,17 @@ if __name__ == "__main__":
     X_dense, Y_dense, Z_dense, interpolant_func = interpol.interpolate(num_points=100)
 
     # Testa a função de interpolação
-    y_test = 30  # Exemplo de ponto
-    x_test = 1  # Exemplo de ponto
-    z_interpolado = interpolant_func([x_test, y_test])
+    x_test = np.linspace(-3, 1, 50)  # Exemplo de ponto
+    y_test = np.linspace(0, 40, 50)  # Exemplo de ponto
+
+    # Inicializando a variável de saída z_interpolado com valores CasADi
+    z_interpolado = np.zeros(len(x_test))  # Usando CasADi para z_interpolado
+
+    # Interpolar para cada ponto de (x, y)
+    for i in range(len(x_test)):
+        for j in range(len(y_test)):
+            z_interpolado[i] = interpolant_func([x_test[i], y_test[j]])
+
     print(f"Valor interpolado em (x={x_test}, y={y_test}):", z_interpolado)
 
     interpol.plot_results(X_dense, Y_dense, Z_dense,x_test,y_test,z_interpolado)
