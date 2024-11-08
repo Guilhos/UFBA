@@ -17,8 +17,8 @@ class DataInterpolatorCasadi:
         self.data.columns = self.data.columns.str.replace(',', '.').astype(float)
 
         # Transpor para garantir que cada coluna represente uma amostra
-        self.X_sample = np.sort(self.data.columns.values)*perc
-        self.Y_sample = np.arange(len(self.data))
+        self.X_sample = np.arange(len(self.data))
+        self.Y_sample = np.sort(self.data.columns.values)
         self.Z_sample = self.data.values
         print("Dados carregados e amostrados aleatoriamente com sucesso.")
         print("Dimensão de X_sample:", self.X_sample.shape)
@@ -32,7 +32,7 @@ class DataInterpolatorCasadi:
         y_dense = np.linspace(self.Y_sample.min(), self.Y_sample.max(), num_points)
         z_flat = self.Z_sample.ravel(order='F')
         
-        lut = ca.interpolant('name','bspline',[self.X_sample,self.Y_sample],z_flat)
+        lut = ca.interpolant('name','bspline',[self.X_sample, self.Y_sample],z_flat)
         
         # Calcular a malha de Z usando os pontos interpolados
         Z_dense = np.zeros((num_points, num_points))
@@ -48,7 +48,7 @@ class DataInterpolatorCasadi:
         fig, (ax1, ax2) = plt.subplots(1, 2, subplot_kw={'projection': '3d'}, figsize=(12, 6))
 
         # Dados Originais (Amostra)
-        X_grid, Y_grid = np.meshgrid(self.X_sample, self.Y_sample)
+        X_grid, Y_grid = np.meshgrid(self.Y_sample, self.X_sample)
         ax1.scatter(X_grid, Y_grid, self.Z_sample,c=self.Z_sample.ravel(), cmap='viridis', edgecolor='k')
         ax1.set_title("Dados Originais (Amostra)")
         ax1.set_xlabel("X")
@@ -56,7 +56,7 @@ class DataInterpolatorCasadi:
         ax1.set_zlabel("Z")
 
         # Superfície Interpolada
-        X_dense_grid, Y_dense_grid = np.meshgrid(X_dense, Y_dense)
+        X_dense_grid, Y_dense_grid = np.meshgrid(Y_dense, X_dense)
         ax2.plot_surface(X_dense_grid, Y_dense_grid, Z_dense, cmap='viridis')
         ax2.set_title("Superfície Interpolada (CasADi)")
         ax2.set_xlabel("X")
@@ -67,7 +67,7 @@ class DataInterpolatorCasadi:
 
 # Exemplo de uso
 if __name__ == "__main__":
-    interpol = DataInterpolatorCasadi('/home/guilhermefreire/UFBA/Iniciação Científica/Sistema de Compressão/tabela_phi.csv')
+    interpol = DataInterpolatorCasadi('E:/Faculdade/UFBA/UFBA/Iniciação Científica/Sistema de Compressão/tabela_phi.csv')
     interpol.load_data(0.5)
     X_dense, Y_dense, Z_dense = interpol.interpolate(num_points=100)
     interpol.plot_results(X_dense,Y_dense,Z_dense)
