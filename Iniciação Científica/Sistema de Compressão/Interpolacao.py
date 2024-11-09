@@ -70,7 +70,7 @@ class DataInterpolatorCasadi:
 
 # Exemplo de uso
 if __name__ == "__main__":
-    interpol = DataInterpolatorCasadi('E:/Faculdade/UFBA/UFBA/Iniciação Científica/Sistema de Compressão/tabela_phi.csv')
+    interpol = DataInterpolatorCasadi('/home/guilhermefreire/UFBA/Iniciação Científica/Sistema de Compressão/tabela_phi.csv')
     interpol.load_data(0.5)
 
     # Cria a função de interpolação
@@ -78,7 +78,7 @@ if __name__ == "__main__":
 
     # Testa a função de interpolação
     x_test = 25  # Exemplo de ponto PODE IR DE 0 A 39, acho que X é provavelmente a massa
-    y_test = 1  # Exemplo de ponto PODE IR DE -3 ATE 1.11, y deve ser o N
+    y_test = 0.5  # Exemplo de ponto PODE IR DE -3 ATE 1.11, y deve ser o N
     # EU REALMENTE NAO SEI COMO AS COORDENADAS ESTAO FUNCIONANDO NA HORA DE PLOTAR, MAS FUNCIONAM, NAO ME PERGUNTE
     z_interpolado = interpolant_func([x_test, y_test])
     print(f"Valor interpolado em (x={x_test}, y={y_test}):", z_interpolado)
