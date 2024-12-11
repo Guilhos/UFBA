@@ -1,7 +1,6 @@
 import time
 import torch
 import torch.nn as nn
-import numpy as np
 
 class MyModel(nn.Module):
     def __init__(self, units, A1, Lc, kv, P1, P_out, C, dt, x_min, x_max, interpolation):
@@ -24,13 +23,13 @@ class MyModel(nn.Module):
                 input_size = 4,
                 hidden_size = units,
                 batch_first= True,
-                bidirectional= True,
+                bidirectional= False,
                 bias = True,
             )
         
         # Camada densa
         self.dense_layers = nn.Sequential(
-            nn.Linear(units*2, 32),
+            nn.Linear(units, 32),
             nn.Tanh(),
             nn.Linear(32, 2),
                 )
@@ -47,7 +46,7 @@ class MyModel(nn.Module):
         return desnormalizado
     
     def loss_custom(self, y_true, y_pred, inputs):
-        data_loss =  1e2* torch.mean((y_true[:, 0, 0] - y_pred[:, :, 0]) ** 2) + 1e1*torch.mean((y_true[:, 0, 1] - y_pred[:, :, 1]) ** 2)
+        data_loss =  1e2* torch.mean((y_true[:, 0, 0] - y_pred[:, :, 0]) ** 2) + 1e2*torch.mean((y_true[:, 0, 1] - y_pred[:, :, 1]) ** 2)
         
         return data_loss
 
