@@ -1,8 +1,7 @@
 import numpy as np
 from scipy.optimize import fsolve
 import casadi as ca
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
+import matplotlib.pyplot as plt
 import time
 
 class Simulation:
@@ -90,7 +89,7 @@ P_out = 5
 C = 479
 
 timestep = 3 # Passos no passado para prever o próximo
-nCiclos = 5 # Número de vezes que o Alfa irá mudar, considere o treino e os testes.
+nCiclos = 7 # Número de vezes que o Alfa irá mudar, considere o treino e os testes.
 alphas = np.random.uniform(0.35,0.65, nCiclos+1) # Abertura da válvula
 epochs = 1500
 nData = 600
@@ -120,27 +119,30 @@ alpha_values = sim.alpha_values
 
 print(sim.time)
 
-fig = make_subplots(rows=2, cols=2, subplot_titles=("Vazão vs Tempo", "Pressão vs Tempo", "Alpha vs Tempo"))
+plt.rcParams.update({
+    'font.size': 22,  # Aumenta o tamanho da fonte geral
+    'axes.titlesize': 24,  # Tamanho do título dos eixos
+    'axes.labelsize': 32,  # Tamanho dos rótulos dos eixos
+    'xtick.labelsize': 25,  # Tamanho dos rótulos do eixo X
+    'ytick.labelsize': 25,  # Tamanho dos rótulos do eixo Y
+    'legend.fontsize': 25,  # Tamanho da fonte da legenda
+})
 
-for i in range(0, nCiclos):
-    # Vazão
-    fig.add_trace(go.Scatter(x=interval[i], y=np.squeeze(massFlowrate[i]), mode='lines',
-                             name='Vazão', legendgroup='massflow', showlegend=i == 0), row = 1, col = 1)
-    # Pressão
-    fig.add_trace(go.Scatter(x=interval[i], y=np.squeeze(PlenumPressure[i]), mode='lines',
-                             name='Pressão', legendgroup='pressure', showlegend=i == 0), row = 1, col = 2)
-    # Alphas
-    fig.add_trace(go.Scatter(x=interval[i], y=np.squeeze(alpha_values[i]), mode='lines', 
-                             name='Alphas', line=dict(dash='dash'), legendgroup='alpha', showlegend=i == 0), row = 2, col = 1)
+# Plot 2: Pressão vs Tempo
+plt.figure(figsize=(16,9))
+for i in range(nCiclos):
+    plt.plot(interval[i], np.squeeze(PlenumPressure[i]), label=f'Ciclo {i + 1}')
+plt.xlabel("Tempo / s")
+plt.ylabel("Pressão / MPa")
+plt.grid(True)
+plt.show()
 
-# Atualiza layout
-fig.update_layout(
-    xaxis_title='Tempo',
-    grid=dict(rows=1, columns=3),
-    template='plotly',
-    showlegend=False,
-    height = 600
-)
-
-# Mostra a figura
-fig.show()
+# Plot 3: Alpha vs Tempo
+plt.figure(figsize=(16,9))
+plt.title("Alpha vs Tempo")
+for i in range(nCiclos):
+    plt.plot(interval[i], np.squeeze(alpha_values[i]), linestyle='--', label=f'Ciclo {i + 1}')
+plt.xlabel("Tempo")
+plt.ylabel("Alpha")
+plt.grid(True)
+plt.show()
