@@ -164,20 +164,11 @@ plt.rcParams.update({
 })
 
 # Plot 2: Pressão vs Tempo
-plt.figure(figsize=(16,9))
+plt.figure(figsize=(16, 9))
 for i in range(nCiclos):
-    plt.plot(interval[i], np.squeeze(PlenumPressure[i]), label=f'Ciclo {i + 1}')
+    plt.plot(interval[i], np.squeeze(PlenumPressure[i]), label=f'Ciclo {i + 1}', 
+             linewidth=4, color='blue')  # Todas as linhas em azul
 plt.xlabel("Tempo / s")
 plt.ylabel("Pressão / MPa")
-plt.grid(True)
-plt.show()
-
-# Plot 3: Phi vs Tempo
-plt.figure(figsize=(16,9))
-plt.title("Phi vs Tempo")
-for i in range(nCiclos):
-    plt.plot(interval[i], np.squeeze(phi_values[i]), linestyle='--', label=f'Ciclo {i + 1}')
-plt.xlabel("Tempo")
-plt.ylabel("Phi")
 plt.grid(True)
 plt.show()
