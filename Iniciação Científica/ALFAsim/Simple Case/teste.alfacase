@@ -1,0 +1,498 @@
+physics:
+  hydrodynamic_model: hydrodynamic_model_4_fields
+  simulation_regime: simulation_regime_transient
+  energy_model: global_model
+  solids_model: no_model
+  solids_model_plugin_id:
+  initial_condition_strategy: constant
+  keep_former_results: False
+  emulsion_model_enabled: False
+  emulsion_relative_viscosity_model: model_default
+  emulsion_pal_rhodes_phi_rel_100:
+    value: 0.765
+    unit: '-'
+  emulsion_woelflin_a:
+    value: 4.2
+    unit: '-'
+  emulsion_woelflin_b:
+    value: 2.5
+    unit: '-'
+  emulsion_table_based_rel_visc_curve:
+    image:
+      values:
+      - 1.0
+      unit: '-'
+    domain:
+      values:
+      - 0.0
+      unit: m3/m3
+  emulsion_relative_viscosity_tuning_factor:
+    image:
+      values:
+      - 1.0
+      unit: '-'
+    domain:
+      values:
+      - 0.0
+      unit: m3/m3
+  emulsion_droplet_size_model: model_default
+  emulsion_inversion_point_model: model_default
+  emulsion_inversion_water_cut:
+    value: 0.4
+    unit: m3/m3
+  flash_model: hydrocarbon_and_water
+  correlations_package: correlation_package_alfasim
+time_options:
+  stop_on_steady_state: False
+  automatic_restart_autosave_frequency: True
+  initial_time:
+    value: 0.0
+    unit: h
+  final_time:
+    value: 1.0
+    unit: h
+  initial_timestep:
+    value: 0.0001
+    unit: s
+  minimum_timestep:
+    value: 0.0001
+    unit: s
+  maximum_timestep:
+    value: 5.0
+    unit: s
+  restart_autosave_frequency:
+    value: 1.0
+    unit: h
+  minimum_time_for_steady_state_stop:
+    value: 0.0
+    unit: s
+numerical_options:
+  nonlinear_solver_type: nonlinear_solver_alfasim_quasi_newton
+  tolerance: 0.0001
+  maximum_iterations: 5
+  maximum_timestep_change_factor: 2.0
+  maximum_cfl_value: 1.0
+  relaxed_tolerance: 0.0
+  divergence_tolerance: -1.0
+  friction_factor_evaluation_strategy: time_explicit
+  simulation_mode: default
+  enable_solver_caching: True
+  caching_rtol: 0.01
+  caching_atol: 0.0001
+  always_repeat_timestep: False
+plugins: []
+pvt_models:
+  correlations:
+    Correlações 1:
+      oil_density_std:
+        value: 850.0
+        unit: kg/m3
+      gas_density_std:
+        value: 0.9
+        unit: kg/m3
+      rs_sat:
+        value: 150.0
+        unit: sm3/sm3
+      pvt_correlation_package: pvt_correlation_package_standing
+      h2s_mol_frac:
+        value: 0.0
+        unit: '-'
+      co2_mol_frac:
+        value: 0.0
+        unit: '-'
+      oil_viscosity: Egbogah
+      gas_viscosity: Lee Gonzalez Eakin
+      surface_tension: Baker Swerdloff
+outputs:
+  automatic_trend_frequency: True
+  trends:
+    positional_pipe_trends: []
+    overall_pipe_trends: []
+    global_trends:
+    - curve_names:
+      - timestep
+    equipment_trends: []
+    separator_trends: []
+    controller_trends: []
+  trend_frequency:
+    value: 1.0
+    unit: min
+  automatic_profile_frequency: True
+  profiles: []
+  profile_frequency:
+    value: 5.0
+    unit: min
+pipes: []
+nodes: []
+wells: []
+materials:
+- name: Adhesive Polypropylene
+  material_type: solid
+  density:
+    value: 897.0
+    unit: kg/m3
+  thermal_conductivity:
+    value: 0.225
+    unit: W/m.degC
+  heat_capacity:
+    value: 1298.0
+    unit: J/kg.degC
+  inner_emissivity:
+    value: 0.0
+    unit: '-'
+  outer_emissivity:
+    value: 0.0
+    unit: '-'
+  expansion:
+    value: 0.0
+    unit: 1/K
+  viscosity:
+    value: 0.0
+    unit: cP
+- name: Brine
+  material_type: fluid
+  density:
+    value: 1001.0
+    unit: kg/m3
+  thermal_conductivity:
+    value: 0.58
+    unit: W/m.degC
+  heat_capacity:
+    value: 4180.0
+    unit: J/kg.degC
+  inner_emissivity:
+    value: 0.5
+    unit: '-'
+  outer_emissivity:
+    value: 0.5
+    unit: '-'
+  expansion:
+    value: 0.0001
+    unit: 1/degC
+  viscosity:
+    value: 1.0
+    unit: cP
+- name: Carbon Steel
+  material_type: solid
+  density:
+    value: 7865.0
+    unit: kg/m3
+  thermal_conductivity:
+    value: 45.0
+    unit: W/m.degC
+  heat_capacity:
+    value: 502.0
+    unit: J/kg.degC
+  inner_emissivity:
+    value: 0.0
+    unit: '-'
+  outer_emissivity:
+    value: 0.0
+    unit: '-'
+  expansion:
+    value: 0.0
+    unit: 1/K
+  viscosity:
+    value: 0.0
+    unit: cP
+- name: Cement
+  material_type: solid
+  density:
+    value: 1394.0
+    unit: kg/m3
+  thermal_conductivity:
+    value: 0.9
+    unit: W/m.degC
+  heat_capacity:
+    value: 837.0
+    unit: J/kg.degC
+  inner_emissivity:
+    value: 0.0
+    unit: '-'
+  outer_emissivity:
+    value: 0.0
+    unit: '-'
+  expansion:
+    value: 0.0
+    unit: 1/K
+  viscosity:
+    value: 0.0
+    unit: cP
+- name: FBE
+  material_type: solid
+  density:
+    value: 1506.0
+    unit: kg/m3
+  thermal_conductivity:
+    value: 0.294
+    unit: W/m.degC
+  heat_capacity:
+    value: 1591.0
+    unit: J/kg.degC
+  inner_emissivity:
+    value: 0.0
+    unit: '-'
+  outer_emissivity:
+    value: 0.0
+    unit: '-'
+  expansion:
+    value: 0.0
+    unit: 1/K
+  viscosity:
+    value: 0.0
+    unit: cP
+- name: Formation
+  material_type: solid
+  density:
+    value: 1634.0
+    unit: kg/m3
+  thermal_conductivity:
+    value: 3.0
+    unit: W/m.degC
+  heat_capacity:
+    value: 754.0
+    unit: J/kg.degC
+  inner_emissivity:
+    value: 0.0
+    unit: '-'
+  outer_emissivity:
+    value: 0.0
+    unit: '-'
+  expansion:
+    value: 0.0
+    unit: 1/K
+  viscosity:
+    value: 0.0
+    unit: cP
+- name: Gravel
+  material_type: solid
+  density:
+    value: 2650.0
+    unit: kg/m3
+  thermal_conductivity:
+    value: 1.0
+    unit: W/m.degC
+  heat_capacity:
+    value: 1800.0
+    unit: J/kg.degC
+  inner_emissivity:
+    value: 0.0
+    unit: '-'
+  outer_emissivity:
+    value: 0.0
+    unit: '-'
+  expansion:
+    value: 0.0
+    unit: 1/K
+  viscosity:
+    value: 0.0
+    unit: cP
+- name: KCI (completion fluid)
+  material_type: fluid
+  density:
+    value: 1114.1
+    unit: kg/m3
+  thermal_conductivity:
+    value: 0.3
+    unit: W/m.degC
+  heat_capacity:
+    value: 3686.0
+    unit: J/kg.degC
+  inner_emissivity:
+    value: 0.5
+    unit: '-'
+  outer_emissivity:
+    value: 0.5
+    unit: '-'
+  expansion:
+    value: 0.0001
+    unit: 1/degC
+  viscosity:
+    value: 1.5
+    unit: cP
+- name: LPP5
+  material_type: solid
+  density:
+    value: 680.0
+    unit: kg/m3
+  thermal_conductivity:
+    value: 0.17
+    unit: W/m.degC
+  heat_capacity:
+    value: 1500.0
+    unit: J/kg.degC
+  inner_emissivity:
+    value: 0.0
+    unit: '-'
+  outer_emissivity:
+    value: 0.0
+    unit: '-'
+  expansion:
+    value: 0.0
+    unit: 1/K
+  viscosity:
+    value: 0.0
+    unit: cP
+- name: Lift Gas
+  material_type: fluid
+  density:
+    value: 58.63
+    unit: kg/m3
+  thermal_conductivity:
+    value: 0.028
+    unit: W/m.degC
+  heat_capacity:
+    value: 1913.0
+    unit: J/kg.degC
+  inner_emissivity:
+    value: 0.5
+    unit: '-'
+  outer_emissivity:
+    value: 0.5
+    unit: '-'
+  expansion:
+    value: 0.0001
+    unit: 1/degC
+  viscosity:
+    value: 0.01
+    unit: cP
+- name: Mud
+  material_type: fluid
+  density:
+    value: 2110.0
+    unit: kg/m3
+  thermal_conductivity:
+    value: 1.0
+    unit: W/m.degC
+  heat_capacity:
+    value: 1300.0
+    unit: J/kg.degC
+  inner_emissivity:
+    value: 0.5
+    unit: '-'
+  outer_emissivity:
+    value: 0.5
+    unit: '-'
+  expansion:
+    value: 0.0001
+    unit: 1/degC
+  viscosity:
+    value: 20.0
+    unit: cP
+- name: Solid Polypropylene
+  material_type: solid
+  density:
+    value: 897.0
+    unit: kg/m3
+  thermal_conductivity:
+    value: 0.225
+    unit: W/m.degC
+  heat_capacity:
+    value: 1256.0
+    unit: J/kg.degC
+  inner_emissivity:
+    value: 0.0
+    unit: '-'
+  outer_emissivity:
+    value: 0.0
+    unit: '-'
+  expansion:
+    value: 0.0
+    unit: 1/K
+  viscosity:
+    value: 0.0
+    unit: cP
+- name: Synthetic Polypropylene
+  material_type: solid
+  density:
+    value: 657.0
+    unit: kg/m3
+  thermal_conductivity:
+    value: 0.168
+    unit: W/m.degC
+  heat_capacity:
+    value: 1130.0
+    unit: J/kg.degC
+  inner_emissivity:
+    value: 0.0
+    unit: '-'
+  outer_emissivity:
+    value: 0.0
+    unit: '-'
+  expansion:
+    value: 0.0
+    unit: 1/K
+  viscosity:
+    value: 0.0
+    unit: cP
+walls:
+- name: Flowline
+  inner_roughness:
+    value: 0.0
+    unit: mm
+  wall_layer_container:
+  - thickness:
+      value: 25.4
+      unit: mm
+    material_name: Carbon Steel
+    has_annulus_flow: False
+  - thickness:
+      value: 0.3
+      unit: mm
+    material_name: FBE
+    has_annulus_flow: False
+  - thickness:
+      value: 0.3
+      unit: mm
+    material_name: Adhesive Polypropylene
+    has_annulus_flow: False
+  - thickness:
+      value: 2.7
+      unit: mm
+    material_name: Solid Polypropylene
+    has_annulus_flow: False
+  - thickness:
+      value: 62.7
+      unit: mm
+    material_name: Synthetic Polypropylene
+    has_annulus_flow: False
+  - thickness:
+      value: 4.0
+      unit: mm
+    material_name: Solid Polypropylene
+    has_annulus_flow: False
+- name: Riser
+  inner_roughness:
+    value: 0.0
+    unit: mm
+  wall_layer_container:
+  - thickness:
+      value: 18.3
+      unit: mm
+    material_name: Carbon Steel
+    has_annulus_flow: False
+  - thickness:
+      value: 0.3
+      unit: mm
+    material_name: FBE
+    has_annulus_flow: False
+  - thickness:
+      value: 0.3
+      unit: mm
+    material_name: Adhesive Polypropylene
+    has_annulus_flow: False
+  - thickness:
+      value: 2.7
+      unit: mm
+    material_name: Solid Polypropylene
+    has_annulus_flow: False
+  - thickness:
+      value: 72.7
+      unit: mm
+    material_name: Synthetic Polypropylene
+    has_annulus_flow: False
+  - thickness:
+      value: 4.0
+      unit: mm
+    material_name: Solid Polypropylene
+    has_annulus_flow: False

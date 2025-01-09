@@ -146,7 +146,14 @@ outputs:
     - name: Output Options > TrendOutDefinition[0]
       curve_names:
       - timestep
-    equipment_trends: []
+    - name: Output Options > TrendOutDefinition[0] (2)
+      curve_names:
+      - timestep
+    equipment_trends:
+    - name: Output Options > TrendOutDefinition[3]
+      curve_names:
+      - pump pressure drop
+      element_name: Bomba 1
     separator_trends: []
     controller_trends: []
   trend_frequency:
@@ -212,6 +219,345 @@ pipes:
         - 0.0
         - 0.0
         unit: m
+  equipment:
+    pumps:
+      Bomba 1:
+        position:
+          value: 453.61039931514216
+          unit: m
+        flow_direction: forward
+        thermal_efficiency:
+          value: 100.0
+          unit: '%'
+        thermal_efficiency_model: constant
+        type: constant_pressure
+        pressure_boost:
+          value: 20.0
+          unit: bar
+        table:
+          speeds:
+            values:
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 400.0
+            - 400.0
+            - 400.0
+            - 400.0
+            - 400.0
+            - 400.0
+            - 400.0
+            - 400.0
+            - 400.0
+            - 400.0
+            - 400.0
+            - 400.0
+            - 600.0
+            - 600.0
+            - 600.0
+            - 600.0
+            - 600.0
+            - 600.0
+            - 600.0
+            - 600.0
+            - 600.0
+            - 600.0
+            - 600.0
+            - 600.0
+            unit: rpm
+          void_fractions:
+            values:
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.1
+            - 0.1
+            - 0.1
+            - 0.1
+            - 0.1
+            - 0.1
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.1
+            - 0.1
+            - 0.1
+            - 0.1
+            - 0.1
+            - 0.1
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.1
+            - 0.1
+            - 0.1
+            - 0.1
+            - 0.1
+            - 0.1
+            unit: '-'
+          flow_rates:
+            values:
+            - 0.0
+            - 0.05
+            - 0.1
+            - 0.15
+            - 0.2
+            - 0.3
+            - 0.0
+            - 0.05
+            - 0.1
+            - 0.15
+            - 0.2
+            - 0.3
+            - 0.0
+            - 0.05
+            - 0.1
+            - 0.15
+            - 0.2
+            - 0.3
+            - 0.0
+            - 0.05
+            - 0.1
+            - 0.15
+            - 0.2
+            - 0.3
+            - 0.0
+            - 0.05
+            - 0.1
+            - 0.15
+            - 0.2
+            - 0.3
+            - 0.0
+            - 0.05
+            - 0.1
+            - 0.15
+            - 0.2
+            - 0.3
+            unit: m3/s
+          pressure_boosts:
+            values:
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 12.0
+            - 10.0
+            - 9.0
+            - 7.5
+            - 5.0
+            - 0.0
+            - 10.0
+            - 9.0
+            - 8.0
+            - 6.0
+            - 3.5
+            - 0.0
+            - 14.0
+            - 12.0
+            - 10.0
+            - 8.0
+            - 5.5
+            - 0.0
+            - 13.5
+            - 11.2
+            - 9.5
+            - 7.6
+            - 5.2
+            - 0.0
+            unit: bar
+          heads:
+            values:
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            unit: m
+          efficiencies:
+            values:
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            unit: '%'
+          powers:
+            values:
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            - 0.0
+            unit: W
+        speed_curve:
+          time:
+            values:
+            - 0.0
+            unit: s
+          speed:
+            values:
+            - 500.0
+            unit: rpm
+        speed_curve_interpolation_type: constant
+        esp_table:
+          speeds:
+            values:
+            - 0.0
+            unit: rpm
+          void_fractions:
+            values:
+            - 0.0
+            unit: '-'
+          flow_rates:
+            values:
+            - 0.0
+            unit: m3/s
+          pressure_boosts:
+            values:
+            - 0.0
+            unit: bar
+          heads:
+            values:
+            - 0.0
+            unit: m
+          efficiencies:
+            values:
+            - 0.0
+            unit: '%'
+          powers:
+            values:
+            - 0.0
+            unit: W
+        esp_speed:
+          value: 0.0
+          unit: Hz
+        esp_number_of_stages: 1
+        esp_reference_density:
+          value: 1000.0
+          unit: kg/m3
+        esp_manufacturer:
+        esp_model:
+        esp_viscosity_model: no_model
+        density_correction_enabled: False
   environment:
     thermal_model: transient_heat_transfer
     position_input_mode: position_by_md
@@ -427,19 +773,39 @@ pipes:
     unit: '-'
 nodes:
 - name: Node 1
-  node_type: mass_source_boundary
+  node_type: pressure_boundary
   pvt_model: Correlations 1
   pressure_properties:
     pressure:
-      value: 100000.0
-      unit: Pa
+      value: 50.0
+      unit: bar
     temperature:
-      value: 288.6
-      unit: K
+      value: 50.0
+      unit: degC
     tracer_mass_fraction:
       values: []
       unit: '-'
-    split_type: mass_inflow_split_type_constant_volume_fraction
+    split_type: mass_inflow_split_type_pvt
+    mass_fractions:
+      gas:
+        value: 0.5
+        unit: '-'
+      oil:
+        value: 0.5
+        unit: '-'
+      water:
+        value: 0.0
+        unit: '-'
+    volume_fractions:
+      gas:
+        value: 0.5
+        unit: '-'
+      oil:
+        value: 0.5
+        unit: '-'
+      water:
+        value: 0.0
+        unit: '-'
     gas_liquid_ratio:
       value: 0.0
       unit: sm3/sm3
@@ -454,29 +820,9 @@ nodes:
       values: []
       unit: '-'
     temperature:
-      value: 50.0
-      unit: degC
+      value: 288.6
+      unit: K
     source_type: mass_source_type_mass_flow_rates
-    volumetric_flow_rates_std:
-      gas:
-        value: 0.0
-        unit: sm3/d
-      oil:
-        value: 0.0
-        unit: sm3/d
-      water:
-        value: 0.0
-        unit: sm3/d
-    mass_flow_rates:
-      gas:
-        value: 0.002
-        unit: kg/s
-      oil:
-        value: 0.3
-        unit: kg/s
-      water:
-        value: 0.0
-        unit: kg/s
     total_mass_flow_rate:
       value: 1.0
       unit: kg/s
@@ -532,8 +878,8 @@ nodes:
   pvt_model: Correlations 1
   pressure_properties:
     pressure:
-      value: 50.0
-      unit: bar
+      value: 6000000.0
+      unit: Pa
     temperature:
       value: 50.0
       unit: degC
