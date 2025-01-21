@@ -5,7 +5,7 @@ from scipy.optimize import fsolve
 import torch
 
 class Simulation:
-    def __init__(self, A1, Lc, kv, P1, P_out, C, alphas, N_RotS, nAlphas, nData, perturb,tempo, dt, interpolation, timestep):
+    def __init__(self, A1, Lc, kv, P1, P_out, C, alphas, N_RotS, nAlphas, nData, perturbAlpha, perturbN, tempo, dt, interpolation, timestep):
         self.A1 = A1
         self.Lc = Lc
         self.kv = kv
@@ -16,7 +16,8 @@ class Simulation:
         self.N_RotS = N_RotS
         self.nAlphas = nAlphas
         self.nData = nData
-        self.perturb = perturb
+        self.perturbAlpha = perturbAlpha
+        self.perturbN = perturbN
         self.dt = dt
         self.tempo = tempo
         self.timestep = timestep
@@ -63,8 +64,8 @@ class Simulation:
         # Solução Numérica
         tm1 = time.time()
         for i in range(self.nAlphas):
-            alpha_value = self.alphas[i] + np.random.normal(0, self.perturb, self.nData)
-            N_value = self.N_RotS[i] + np.random.normal(0, 50, self.nData)
+            alpha_value = self.alphas[i] + np.random.normal(0, self.perturbAlpha, self.nData)
+            N_value = self.N_RotS[i] + np.random.normal(0, self.perturbN, self.nData)
             self.alpha_values.append(alpha_value)
             self.N_values.append(N_value)
 

@@ -79,7 +79,7 @@ class Simulation:
         # Solução Numérica
         tm1 = time.time()
         for i in range(self.nCiclos):
-            N_value = self.N_RotS[i] + np.random.normal(0, 50, self.nData)
+            N_value = self.N_RotS[i] + np.random.normal(0, 1000, self.nData)
             self.N_values.append(N_value)
 
             rhs = ca.vertcat((self.A1 / self.Lc) * ((lut(ca.vertcat(N, x[0])) * self.P1) - x[1]) * 1e3,
@@ -138,7 +138,7 @@ alpha_values = []
 RNN_train = []
 RNN_trainFut = []
 
-lut = Interpolation('E:/Faculdade/UFBA/UFBA/Iniciação Científica/Sistema de Compressão/tabela_phi.csv')
+lut = Interpolation('/home/guilhermefreire/UFBA-1/Iniciação Científica/Sistema de Compressão/tabela_phi.csv')
 lut.load_data()
 interpolation = lut.interpolate()
 # Crie uma instância da classe Simulation
