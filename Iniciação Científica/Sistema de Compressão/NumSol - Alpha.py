@@ -94,7 +94,7 @@ alphas = np.random.uniform(0.35,0.65, nCiclos+1) # Abertura da válvula
 epochs = 1500
 nData = 600
 nDataTeste = nData//nCiclos
-perturb = 1e-4
+perturb = 5e-3
 tempo = 60
 dt = 0.1 # Tempo amostral
 
