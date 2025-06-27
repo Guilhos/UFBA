@@ -242,10 +242,7 @@ class RiserModel:
             wtg, wto, Prh, Pm, ro_r, wrh # Riser e variáveis comuns
         )
 
-        return ca.Function('f_modelo', [x, par], [outputs, x_new], ['x', 'par'], ['outputs', 'x_new'])
-    
-    
-    
+        return ca.Function('f_modelo', [x, par], [outputs, x_new], ['x', 'u', 'par'], ['outputs', 'x_new'])
 
 if __name__ == "__main__":
     sim = RiserModel(p=10, m=2, steps=1000, dt=1)
