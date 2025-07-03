@@ -108,12 +108,10 @@ class RiserModel:
         self.x = []
         self.u = []
 
-        self.par1 = [1]*self.m
-        self.par2 = [1]*self.m
+        self.u0 = [10]*self.m*self.nU
 
         self.f_modelo = self.createModelo()
-
-        self.caYPredFun, self.caXPredFun, self.caUPredFun = self.caPredFunction()
+        self.caPredFun = self.caPredFunction()
     
     def fun(self, x, par):
         # x[0]: m_ga1 (massa de gás no anular do poço 1)
@@ -261,36 +259,31 @@ class RiserModel:
     
     def caPredFunction(self):
         x0 = ca.MX.sym('x0', self.nX*self.m, 1)  # Vetor de estados iniciais
+        u0 = ca.MX.sym('u0', self.nU*self.m, 1)  # Vetor de parâmetros de controle iniciais
         dU = ca.MX.sym('dU', self.nU*self.m, 1)  # Variação dos parâmetros de controle
-        par1 = ca.MX.sym('par1', self.nU*self.m, 1)  # Parâmetros de controle
-        par2 = ca.MX.sym('par2', self.nU*self.m, 1)  # Parâmetros de controle
 
         init_x = x0[-self.nX:]  # Últimos estados iniciais
 
         y = ca.MX()
         x = ca.MX()
         u = ca.MX()
-        par1_curr = par1
-        par2_curr = par2
+        u0_curr = u0
 
         for j in range(self.p):
             if j < self.m:
-                par1_curr = ca.vertcat(par1_curr, par1_curr[-1] + dU[2*j])
-                par1_curr = par1_curr[1:]
-                par2_curr = ca.vertcat(par2_curr, par2_curr[-1] + dU[2*j+1])
-                par2_curr = par2_curr[1:]
-            par = ca.vertcat(par1_curr[-1], par2_curr[-1])  # Concatenando os parâmetros de controle
+                u0_curr = ca.vertcat(u0_curr, u0_curr[-2] + dU[2*j])
+                u0_curr = ca.vertcat(u0_curr, u0_curr[-1] + dU[2*j+1])
+                u0_curr = u0_curr[2:]
+            par = ca.vertcat(u0_curr[-2], u0_curr[-1])  # Concatenando os parâmetros de controle
             outputs, init_x = self.f_modelo(init_x, par)
             y = ca.vertcat(y, outputs)
             x = ca.vertcat(x, init_x)
             if j < self.m:
                 u = ca.vertcat(u, par)
 
-        y_trend = ca.Function('y_trend', [x0, dU, par1, par2], [y])
-        x_trend = ca.Function('x_trend', [x0, dU, par1, par2], [x])
-        u_trend = ca.Function('u_trend', [x0, dU, par1, par2], [u])
+        out_trend = ca.Function('y_trend', [x0, u0, dU], [y, x, u])
 
-        return y_trend, x_trend, u_trend
+        return out_trend
     
     def pPlanta(self, x0, dU):
         self.x = []
@@ -299,28 +292,47 @@ class RiserModel:
 
         for j in range(self.p):
             if j < self.m:
-                self.par1.append(self.par1[-1] + dU[2*j])
-                self.par2.append(self.par2[-1] + dU[2*j+1])
-            par = np.array([self.par1[-1], self.par2[-1]])
+                self.u0.append(self.u0[-2] + dU[2*j])
+                self.u0.append(self.u0[-1] + dU[2*j+1])
+            par = np.array([self.u0[-2], self.u0[-1]])
             outputs, init_x = self.f_modelo(init_x, par)
             self.y.append(outputs.full().flatten())
             self.x.append(init_x.full().flatten())
             if j < self.m:
-                self.u.append([self.par1[-1], self.par2[-1]])
+                self.u.append([self.u0[-2], self.u0[-1]])
             
         self.y = np.array(self.y).reshape(-1,1)
         self.x = np.array(self.x).reshape(-1, 1)
         self.uk = np.array(self.u).reshape(-1,1)[-self.nU:]
         return self.y, self.x, self.uk
     
+    def pIniciais(self):
+        u0 = [10]*self.m*self.nU
+        def fun_wrap(x, par1, par2):
+            x_casadi = ca.DM(x)
+            result_casadi = self.fun(x_casadi, [par1, par2])
+            return np.array(result_casadi).flatten()
+        init_x = fsolve(fun_wrap, (3000, 3000, 800, 800, 6000, 6000, 130, 700), args=(u0[0], u0[1]))
+
+        for j in range(self.p):
+            par = np.array([self.u0[0], self.u0[1]])
+            outputs, init_x = self.f_modelo(init_x, par)
+            self.y.append(outputs.full().flatten())
+            self.x.append(init_x.full().flatten())
+            if j < self.m:
+                self.u.append([self.u0[-2], self.u0[-1]])
+
+        y0 = np.array(self.y[:self.steps]).reshape(-1, 1)
+        x0 = np.array(self.x[:self.steps]).reshape(-1, 1)
+        u0 = np.array(self.u[:self.steps]).reshape(-1, 1)
+
+        return y0, x0, u0
+    
     def setPoints(self, nSP):
 
         def fun_wrap(x, par1, par2):
-            # Converte os valores para CasADi (caso necessário)
             x_casadi = ca.DM(x)
-            # Chama a função original (que retorna CasADi)
             result_casadi = self.fun(x_casadi, [par1, par2])
-            # Converte a saída CasADi para NumPy 1D
             return np.array(result_casadi).flatten()
 
         SPlist = []
@@ -328,7 +340,9 @@ class RiserModel:
             par1 = np.random.randint(0, 10)
             par2 = np.random.randint(0, 10)
             result = fsolve(fun_wrap, (3000, 3000, 800, 800, 6000, 6000, 130, 700), args=(par1, par2))
-            SPlist.append([result, par1, par2])
+            x_eq = ca.DM(result)
+            y_eq = self.f_modelo(x_eq, [par1, par2])[0]
+            SPlist.append([y_eq, x_eq, [par1, par2]])
 
         return SPlist
 
@@ -515,8 +529,7 @@ if __name__ == "__main__":
             dU_total[k][1] = dU_total[k][1] + 0.05
             dU_total[k][2] = dU_total[k][2] + 0.05
             dU_total[k][3] = dU_total[k][3] + 0.05
-    par1 = np.ones((sim.nU * sim.m, 1)) * 1.0
-    par2 = np.ones((sim.nU * sim.m, 1)) * 1.0
+    u0 = np.ones((sim.nU * sim.m, 1))
 
     x_hist = []
     y_hist = []
@@ -526,8 +539,10 @@ if __name__ == "__main__":
         dU = dU_total[k]
 
         # Obtem predição de saída e controle futuro (modelo interno)
-        y_pred = sim.caYPredFun(x0, dU, par1, par2).full().flatten()
-        u_pred = sim.caUPredFun(x0, dU, par1, par2).full().flatten()
+        y_pred, x_pred, u_pred = sim.caPredFun(x0, dU, u0)
+        y_pred = y_pred.full().flatten()
+        x_pred = x_pred.full().flatten()
+        u_pred = u_pred.full().flatten()
 
         # Planta responde ao controle aplicado
         y_out, x_out, u_out = sim.pPlanta(x0, dU)
@@ -535,8 +550,8 @@ if __name__ == "__main__":
         x0 = np.vstack((x0[sim.nX:], x_out[-sim.nX:]))  # Remove o mais antigo, adiciona novo
 
         # Atualiza histórico de controle
-        par1 = np.vstack((par1[1:], [u_out[-2][0]]))
-        par2 = np.vstack((par2[1:], [u_out[-1][0]]))
+        u0 = np.vstack((u0[1:], [u_out[-2][0]]))
+        u0 = np.vstack((u0[1:], [u_out[-1][0]]))
 
         x_hist.append(x_out[-sim.nY:])
         y_hist.append(y_out[-sim.nY:])
