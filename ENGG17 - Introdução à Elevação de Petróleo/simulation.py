@@ -9,7 +9,7 @@ g = 9.81  # Aceleração da gravidade [m/s²]
 R = 8.314 # Constante dos gases [J/mol.K]
 
 # Parâmetros Gerais do Sistema 
-M = 0.028 # Massa molar do gás [kg/mol]
+M = 0.02 # Massa molar do gás [kg/mol]
 ro_o = 800 # Densidade do óleo no reservatório [kg/m³] 
 Ps = 2e6  # Pressão do separador [Pa]
 vo = 1 / ro_o # Volume específico do óleo [m³/kg]
@@ -108,7 +108,7 @@ class RiserModel:
         self.x = []
         self.u = []
 
-        self.u0 = [10]*self.m*self.nU
+        self.u0 = [2.5]*self.m*self.nU
 
         self.f_modelo = self.createModelo()
         self.caPredFun = self.caPredFunction()
@@ -128,10 +128,9 @@ class RiserModel:
 
         # --- Cálculos para o Poço 1 ---
         # Adaptação das suas fórmulas com as variáveis de Poço 1
-        Pai1 = ((R * Ta1 / (Va1 * M)) + ((g * Ha1) / (La1 * Aa1))) * x[0]
+        Pai1 = ((R * Ta1 / (Va1 * M)) + ((g * La1) / (La1 * Aa1))) * x[0]
         ro_w1 = (x[2] + x[4] - (ro_o * Lr1 * Ar1)) / (Lw1 * Aw1) # Lr1*Ar1 é a forma do seu código
-        Pwh1 = (R * Tw1 / M) * (x[2] / (Lw1 * Aw1 + Lr1 * Ar1 - (vo * x[4]))) # Replicando 'vo * x3' com 'ro_o * x[4]' e 'Lr * Ar' com 'Lr1 * Ar1'
-
+        Pwh1 = (R * Tw1 / M) * (x[2] / (Lw1 * Aw1 + Lr1 * Ar1 - (vo * x[4]))) - 1/2 * (x[2] + x[4] *g *Hw1 /(Lw1 * Aw1))
         Pwi1 = Pwh1 + g / (Lw1 * Aw1) * (x[4] + x[2] - ro_o * Lr1 * Ar1) * Hw1 + dp_fric_t1 
         Pbh1 = Pwi1 + (ro_w1 * g * Hbh1) + dp_fric_bh1
         ro_a1 = (M * Pai1) / (R * Ta)
@@ -141,9 +140,9 @@ class RiserModel:
         wrg1 = GOR1 * wro1
 
         # --- Cálculos para o Poço 2 ---
-        Pai2 = ((R * Ta2 / (Va2 * M)) + ((g * Ha2) / (La2 * Aa2))) * x[1]
+        Pai2 = ((R * Ta2 / (Va2 * M)) + ((g * La2) / (La2 * Aa2))) * x[1]
         ro_w2 = (x[3] + x[5] - (ro_o * Lr2 * Ar2)) / (Lw2 * Aw2)
-        Pwh2 = (R * Tw2 / M) * (x[3] / (Lw2 * Aw2 + Lr2 * Ar2 - (vo * x[5])))
+        Pwh2 = (R * Tw2 / M) * (x[3] / (Lw2 * Aw2 + Lr2 * Ar2 - (vo * x[5]))) - 1/2 * (x[3] + x[5] *g *Hw2 /(Lw2 * Aw2))
 
         ro_a2 = (M * Pai2) / (R * Ta)
         Pwi2 = Pwh2 + g / (Lw2 * Aw2) * (x[5] + x[3] - ro_o * Lr2 * Ar2) * Hw2 + dp_fric_t2
@@ -208,9 +207,9 @@ class RiserModel:
 
         # --- Cálculos para o Poço 1 ---
         
-        Pai1 = ((R * Ta1 / (Va1 * M)) + ((g * Ha1) / (La1 * Aa1))) * x[0]
+        Pai1 = ((R * Ta1 / (Va1 * M)) + ((g * La1) / (La1 * Aa1))) * x[0]
         ro_w1 = (x_new[2] + x_new[4] - (ro_o * Lr1 * Ar1)) / (Lw1 * Aw1)
-        Pwh1 = (R * Tw1 / M) * (x_new[2] / (Lw1 * Aw1 + Lr1 * Ar1 - (vo * x_new[4])))
+        Pwh1 = (R * Tw1 / M) * (x_new[2] / (Lw1 * Aw1 + Lr1 * Ar1 - (vo * x_new[4]))) - 1/2 * (x[2] + x[4] *g *Hw1 /(Lw1 * Aw1))
         Pwi1 = Pwh1 + g / (Lw1 * Aw1) * (x_new[4] + x_new[2] - ro_o * Lr1 * Ar1) * Hw1 + dp_fric_t1
         Pbh1 = Pwi1 + (ro_w1 * g * Hbh1) + dp_fric_bh1
         ro_a1 = (M * Pai1) / (R * Ta)
@@ -219,10 +218,10 @@ class RiserModel:
         wrg1 = GOR1 * wro1
         
         # --- Cálculos para o Poço 2 ---
-        Pai2 = ((R * Ta2 / (Va2 * M)) + ((g * Ha2) / (La2 * Aa2))) * x_new[1]
+        Pai2 = ((R * Ta2 / (Va2 * M)) + ((g * La2) / (La2 * Aa2))) * x_new[1]
         ro_a2 = (M * Pai2) / (R * Ta)
         ro_w2 = (x_new[3] + x_new[5] - (ro_o * Lr2 * Ar2)) / (Lw2 * Aw2)
-        Pwh2 = (R * Tw2 / M) * (x_new[3] / (Lw2 * Aw2 + Lr2 * Ar2 - (vo * x_new[5])))
+        Pwh2 = (R * Tw2 / M) * (x_new[3] / (Lw2 * Aw2 + Lr2 * Ar2 - (vo * x_new[5]))) - 1/2 * (x[3] + x[5] *g *Hw2 /(Lw2 * Aw2))
         Pwi2 = Pwh2 + g / (Lw2 * Aw2) * (x_new[5] + x_new[3] - ro_o * Lr2 * Ar2) * Hw2 + dp_fric_t2
         Pbh2 = Pwi2 + (ro_w2 * g * Hbh2) + dp_fric_bh2
         wiv2 = Civ2 * ca.sqrt(ca.fmax(0, ro_a2 * (Pai2 - Pwi2)))
@@ -249,11 +248,13 @@ class RiserModel:
         wtg = (x_new[6] / (x_new[6] + x_new[7])) * wrh
         wto = (x_new[7] / (x_new[6] + x_new[7])) * wrh
 
-        outputs = ca.vertcat(
-            wiv1, wro1, wpc1, wpg1_prod, wpo1_prod, Pai1, Pwh1, Pwi1, Pbh1, wrg1, # Poço 1
-            wiv2, wro2, wpc2, wpg2_prod, wpo2_prod, Pai2, Pwh2, Pwi2, Pbh2, wrg2, # Poço 2
-            wtg, wto, Prh, Pm, ro_r, wrh # Riser e variáveis comuns
-        )
+        # outputs = ca.vertcat(
+        #     wiv1, wro1, wpc1, wpg1_prod, wpo1_prod, Pai1, Pwh1, Pwi1, Pbh1, wrg1, # Poço 1
+        #     wiv2, wro2, wpc2, wpg2_prod, wpo2_prod, Pai2, Pwh2, Pwi2, Pbh2, wrg2, # Poço 2
+        #     wtg, wto, Prh, Pm, ro_r, wrh # Riser e variáveis comuns
+        # )
+
+        outputs = ca.vertcat(Pbh1, Pbh2)
 
         return ca.Function('f_modelo', [x, par], [outputs, x_new], ['x', 'par'], ['outputs', 'x_new'])
     
@@ -307,20 +308,19 @@ class RiserModel:
         return self.y, self.x, self.uk
     
     def pIniciais(self):
-        u0 = [10]*self.m*self.nU
-        def fun_wrap(x, par1, par2):
-            x_casadi = ca.DM(x)
-            result_casadi = self.fun(x_casadi, [par1, par2])
-            return np.array(result_casadi).flatten()
-        init_x = fsolve(fun_wrap, (3000, 3000, 800, 800, 6000, 6000, 130, 700), args=(u0[0], u0[1]))
+        u0 = [2.5]*self.m*self.nU
+        x0 = np.array([3000, 3000, 800, 800, 6000, 6000, 130, 700])  # Estados iniciais
 
-        for j in range(self.p):
-            par = np.array([self.u0[0], self.u0[1]])
-            outputs, init_x = self.f_modelo(init_x, par)
-            self.y.append(outputs.full().flatten())
-            self.x.append(init_x.full().flatten())
-            if j < self.m:
-                self.u.append([self.u0[-2], self.u0[-1]])
+        t0 = 1
+        tf = 16000
+        dt = self.dt
+        t = np.arange(t0, tf, dt)
+
+        for ti in t:
+            y0, x0 = self.f_modelo(x0, u0[-2:])
+            self.y.append(y0.full().flatten())
+            self.x.append(x0.full().flatten())
+            self.u.append(u0[-2:])
 
         y0 = np.array(self.y[:self.steps]).reshape(-1, 1)
         x0 = np.array(self.x[:self.steps]).reshape(-1, 1)
@@ -337,8 +337,8 @@ class RiserModel:
 
         SPlist = []
         for i in range(nSP):
-            par1 = np.random.randint(0, 10)
-            par2 = np.random.randint(0, 10)
+            par1 = np.random.randint(0, 5)
+            par2 = np.random.randint(0, 5)
             result = fsolve(fun_wrap, (3000, 3000, 800, 800, 6000, 6000, 130, 700), args=(par1, par2))
             x_eq = ca.DM(result)
             y_eq = self.f_modelo(x_eq, [par1, par2])[0]
