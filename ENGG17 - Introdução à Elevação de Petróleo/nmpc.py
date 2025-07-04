@@ -26,7 +26,7 @@ class NMPC:
 
         # TODO: Adicionar restrições de entrada e estado
         self.u_min = np.array([[0], [0]])
-        self.u_max = np.array([[20], [20]])
+        self.u_max = np.array([[5], [5]])
         self.dU_min = np.array([[-0.1], [-0.1]])
         self.dU_max = np.array([[0.1], [0.1]])
         self.y_min = np.array([[0] for _ in range(nY)])
@@ -97,7 +97,7 @@ class NMPC:
 
         # Predição do modelo
         yModel_pred, _, _ = self.sim_pred.caPredFun(xModelk, uModelk, dUs)
-        
+
         # Matriz triangular para os controles
         matriz_inferior = self.matriz_triangular_identidade(self.m, self.m, self.nU)
 
@@ -177,7 +177,7 @@ class NMPC:
             umk = np.append(umk, umk[-self.nU:] + self.dUk)
             umk = umk[self.nU:]
 
-            ymk_next, xmk_next, umk_next = self.sim_mf.caPredFun(xmk[-self.nX:], umk[-self.nU:], dU_opt[-self.nU:])
+            ymk_next, xmk_next, umk_next = self.sim_mf.caPredFun(xmk[-self.nX:], umk[-self.nU:], [0,0])
             ymk_next = np.array(ymk_next.full())
             xmk_next = np.array(xmk_next.full())
             umk_next = np.array(umk_next.full())
@@ -211,8 +211,8 @@ class NMPC:
             index = i // change
             if i >= 20:
                 for j in range(self.p):
-                    self.y_sp[8*j] = 7e6
-                    self.y_sp[18*j] = 7e6
+                    self.y_sp[2*j] = 9.5e6
+                    self.y_sp[2*j+1] = 10e6
                 
         #self.plot_results(iter, Ymk, Ypk, Upk, YspM, YspP, Tempos)
         
