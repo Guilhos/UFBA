@@ -3,11 +3,12 @@ import matplotlib.pyplot as plt
 import os
 import pickle
 
-def plot_results(iter, Ymk, Ypk, Upk, dU, Ysp, Tempos):
+def plot_results(iter, Ymk, Ypk, Upk, dU, Ysp, Tempos, dt):
     # Verifica se o diretório 'plots' existe, caso contrário, cria
     imagesPath = os.path.join(os.getcwd(), 'ENGG17 - Introdução à Elevação de Petróleo/plots')
     os.makedirs(imagesPath, exist_ok=True)
 
+    # Plot das entradas e pressões de fundo de poço
     plt.figure(figsize=(16, 14))
 
     Ymk = np.array(Ymk)
@@ -16,7 +17,7 @@ def plot_results(iter, Ymk, Ypk, Upk, dU, Ysp, Tempos):
     dU = np.array(dU)
     Ysp = np.array(Ysp)
 
-    t = np.arange(iter)*10
+    t = np.arange(iter)*dt
 
     plt.subplot(2, 1, 1)
     plt.plot(t, Upk[:, 0], label="wgl1 (Poço 1)")
@@ -43,6 +44,6 @@ def plot_results(iter, Ymk, Ypk, Upk, dU, Ysp, Tempos):
     plt.savefig(os.path.join(imagesPath, "saida.png"))
 
 with open('ENGG17 - Introdução à Elevação de Petróleo/results_NMPC.pkl', 'rb') as f:
-    iter, Ymk, Ypk, Upk, dU, Ysp, Tempos = pickle.load(f)
+    iter, Ymk, Ypk, Upk, dU, Ysp, Tempos, dt = pickle.load(f)
 
-plot_results(iter, Ymk, Ypk, Upk, dU, Ysp, Tempos)
+plot_results(iter, Ymk, Ypk, Upk, dU, Ysp, Tempos, dt)

@@ -5,30 +5,35 @@ import simulation as sim
 import time
 
 class NMPC:
-    def __init__(self, p, m, steps, nY, nX, nU, Q, R, dt, SP, iter):
-        self.p = p
-        self.m = m
-        self.steps = steps
-        self.nU = nU
-        self.nX = nX
-        self.nY = nY
-        self.Q = Q
-        self.R = R
-        self.iter = iter
+    def __init__(self, p, m, steps, nY, nX, nU, Q, R, dt, iter):
+        # Constantes iniciais
+        self.p = p # Horizonte de predição
+        self.m = m # Horizonte de controle
+        self.steps = steps # Passos no passado
+        self.nU = nU # Número de entradas
+        self.nX = nX # Número de estados
+        self.nY = nY # Número de saídas
+        self.Q = Q # Matriz de peso das saídas
+        self.R = R # Matriz de peso das entradas
+        self.iter = iter # Quantidade de iterações
+        self.dt = dt # Tempo entre cada ponto simulado
+        # Tempo total simulado = iter * dt
 
         self.dU = np.zeros((nU * m, 1)) 
 
+        # Objetos para simulação
         self.sim_pred = sim.RiserModel(p, m, steps, nY, nX, nU, dt)
         self.sim_mf = sim.RiserModel(1, 1, steps, nY, nX, nU, dt)
         
-        self.SPList = self.sim_mf.setPoints(SP)
-        self.y_sp, _, _ = self.SPList[0]
+        # Setpoints
+        self.SPList = [[9e6, 9.5e6], [9.25e6, 9.25e6], [9.1e6, 9.4e6], [9.3e6, 9.2e6]]
+        self.y_sp = self.SPList[0]
 
         # TODO: Adicionar restrições de entrada e estado
         self.u_min = np.array([[0], [0]])
         self.u_max = np.array([[5], [5]])
-        self.dU_min = np.array([[-0.1], [-0.1]])
-        self.dU_max = np.array([[0.1], [0.1]])
+        self.dU_min = np.array([[-1], [-1]])
+        self.dU_max = np.array([[1], [1]])
         self.y_min = np.array([[0] for _ in range(nY)])
         self.y_max = np.array([[np.inf] for _ in range(nY)])
     
@@ -113,11 +118,10 @@ class NMPC:
 
         opti.solver('ipopt', {
             "ipopt.print_level": 0,
-            "ipopt.tol": 1e-6,                      # Tolerância do solver (pode ajustar entre 1e-4 e 1e-8)
-            "ipopt.constr_viol_tol": 1e-8,          
-            "ipopt.max_iter": 750,                   # Reduz número de iterações (ajustável)
-            "ipopt.mu_strategy": "adaptive",         # Estratégia de barreira mais eficiente
-            "ipopt.linear_solver": "mumps",          # Solver linear mais rápido para problemas médios/grandes
+            "ipopt.tol": 1e-6,         
+            "ipopt.max_iter": 750,
+            "ipopt.mu_strategy": "adaptive",
+            "ipopt.linear_solver": "mumps",
             "ipopt.sb": "yes"
         })
         print(opti)
@@ -130,6 +134,7 @@ class NMPC:
         )
 
     def otimizar(self, ymk, xmk, umk, ypk):
+        # Valores iniciais antes da otimização
         dYk = ypk - ymk[-self.nY:]
         dYk = ca.repmat(dYk, self.p, 1)
         dU_init = self.dU
@@ -137,6 +142,7 @@ class NMPC:
         yModel_init = np.array(yModel_init.full())
         Fs_init = (yModel_init - self.y_sp + dYk).T @ self.Q @ (yModel_init - self.y_sp + dYk) + dU_init.T @ self.R @ dU_init
 
+        # Otimização
         x_opt = self.opti_nlp(ymk, xmk, umk, ypk, self.y_sp, dU_init, Fs_init)
 
         dU_opt = x_opt[:self.nU * self.m]
@@ -144,19 +150,25 @@ class NMPC:
         return dU_opt
     
     def run(self):
+        # Ajuste matricial
         self.ajusteMatrizes()
+        
+        # Valores iniciais
+        '''Aqui os valores são preparados
+        os valores que têm 'm' são valores para o modelo, 'p' para a planta
+        os valores com _next são os valores que serão aplicados nas listas para print'''
         ymk, xmk, umk = self.sim_pred.pIniciais()
         ypk = ymk[-self.nY:]
-        self.y_sp = ypk
-        self.y_sp = ca.DM(self.iTil(self.y_sp,self.p).reshape(-1,1))
         ymk_next = ypk
         xpk = xmk[-self.nX:]
         xmk_next = xpk
         upk = umk[-self.nU:]
         umk_next = upk
 
+        # Lei de controle
         self.opti_nlp = self.nlp_func()
 
+        # Listas para plot
         Ypk_forPrint = []
         Upk_forPrint = []
         dU_forPrint = []
@@ -164,19 +176,22 @@ class NMPC:
         Ysp_forPrint = []
         Tempos_forPrint = []
 
-        change = self.iter // len(self.SPList)
+        # Loop de controle
         for i in range(self.iter): 
             t1 = time.time()
             print(15*'='+ f'Iteração {i+1}' + 15*'=')
+            # Otimização e predição dos passos de controle
             dU_opt = self.otimizar(ymk, xmk, umk, ypk)
             
             self.dUk = dU_opt[:self.nU]
             self.dU = dU_opt
             
+            # Aplica o primeiro passo de controle nas entradas
             umk = umk.reshape(self.steps*self.nU, 1)
             umk = np.append(umk, umk[-self.nU:] + self.dUk)
             umk = umk[self.nU:]
 
+            # Simulação de apenas 1 passo pelo modelo
             ymk_next, xmk_next, umk_next = self.sim_mf.caPredFun(xmk[-self.nX:], umk[-self.nU:], [0,0])
             ymk_next = np.array(ymk_next.full())
             xmk_next = np.array(xmk_next.full())
@@ -186,10 +201,13 @@ class NMPC:
             Tempos_forPrint.append(t2-t1)
             print(f'Tempo decorrido: {t2-t1}')
             
+            # Simulação de apenas 1 passo pela planta
             ypk, xpk, upk = self.sim_mf.pPlanta(xpk, self.dUk)
 
+            # Diferença entre a simulação da planta e modelo
             print('dYk: ',ymk_next - ypk)
             
+            # Atualizações de variáveis para o próximo loop
             upk = upk.flatten()
             xpk = xpk.flatten()
             ypk = ypk.flatten()
@@ -201,20 +219,21 @@ class NMPC:
             umk = np.append(umk, umk_next)
             umk = umk[self.nU:]
 
-            Ymk_forPrint.append(ymk_next)
-            Ypk_forPrint.append(ypk)
-            Upk_forPrint.append(upk)
-            dU_forPrint.append(self.dUk)
-            print('dUk: ',dU_opt[:self.m*self.nU])
-            Ysp_forPrint.append(self.y_sp)
+            # Variáveis para visualização
+            Ymk_forPrint.append(ymk_next.copy())
+            Ypk_forPrint.append(ypk.copy())
+            Upk_forPrint.append(upk.copy())
+            dU_forPrint.append(self.dUk.copy())
+            print('dU_opt: ',dU_opt[:self.m*self.nU])
+            print('dUk: ', self.dUk)
+            Ysp_forPrint.append(np.array(self.y_sp.full()).copy())
             
-            index = i // change
-            if i >= 20:
-                for j in range(self.p):
-                    self.y_sp[2*j] = 9.5e6
-                    self.y_sp[2*j+1] = 10e6
-                
-        #self.plot_results(iter, Ymk, Ypk, Upk, YspM, YspP, Tempos)
-        
-        return self.iter, Ymk_forPrint, Ypk_forPrint, Upk_forPrint, dU_forPrint, Ysp_forPrint, Tempos_forPrint
+            # Mudança de setpoint
+            set_index = i // (self.iter // len(self.SPList))
+            set_index = min(set_index, len(self.SPList)-1)
 
+            for j in range(self.p):
+                self.y_sp[2*j] = self.SPList[set_index][0]
+                self.y_sp[2*j+1] = self.SPList[set_index][1]
+        
+        return self.iter, Ymk_forPrint, Ypk_forPrint, Upk_forPrint, dU_forPrint, Ysp_forPrint, Tempos_forPrint, self.dt

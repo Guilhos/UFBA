@@ -29,12 +29,12 @@ import pickle
         # 24: ro_r     - Densidade média do fluido no riser
         # 25: wrh      - Vazão total no riser (gás + óleo)
 
-Q = [1e-2,1e-2]
+Q = [1e-6,1e-6]
 R = [1,1]
 
 p, m, steps = 10, 3, 3
-NMPC = NMPC(p, m, steps, 2, 8, 2, Q, R, 10, 1, 160)
-iter, Ymk, Ypk, Upk, dU, Ysp, Tempos = NMPC.run()
+NMPC = NMPC(p, m, steps, 2, 8, 2, Q, R, 10, 320)
+iter, Ymk, Ypk, Upk, dU, Ysp, Tempos, dt = NMPC.run()
 
 # Salvando os resultados em um arquivo pickle
 with open('ENGG17 - Introdução à Elevação de Petróleo/results_NMPC.pkl', 'wb') as f:
@@ -45,5 +45,6 @@ with open('ENGG17 - Introdução à Elevação de Petróleo/results_NMPC.pkl', '
         Upk,
         dU,
         Ysp,
-        Tempos
+        Tempos,
+        dt
     ), f)
