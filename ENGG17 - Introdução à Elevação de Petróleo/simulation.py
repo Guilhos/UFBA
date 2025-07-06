@@ -97,6 +97,7 @@ dp_fric_r_comum = 0
 
 class RiserModel:
     def __init__(self, p, m, steps, nY, nX, nU, dt):
+        # Contantes iniciais
         self.p = p
         self.m = m
         self.steps = steps
@@ -108,7 +109,9 @@ class RiserModel:
         self.x = []
         self.u = []
 
-        self.u0 = [2.5]*self.m*self.nU
+        # Injeção inicial para simulação do sistema
+        self.injInit = 2.5
+        self.u0 = [self.injInit]*self.m*self.nU
 
         self.f_modelo = self.createModelo()
         self.caPredFun = self.caPredFunction()
@@ -189,6 +192,13 @@ class RiserModel:
         return ode
     
     def createModelo(self):
+        # Modelo de nicole
+        '''Você pode colocar qualquer modelo de qualquer sistema aqui,
+          pois é um MPC não linear, MAS você precisa fazer as alterações necessárias
+          ou seja, quantidade de variáveis, como o modelo vai retornar,
+          se isso altera algo no NMPC (caso você esteja trabalhando com
+          estados = saídas, você deve remanejar muitas coisas)'''
+        
         x = ca.MX.sym('x', 8)  # 8 estados do sistema
         par = ca.MX.sym('par', 2)  # 2 parâmetros
         t = ca.MX.sym('t')
@@ -254,11 +264,16 @@ class RiserModel:
         #     wtg, wto, Prh, Pm, ro_r, wrh # Riser e variáveis comuns
         # )
 
+        # Aqui meu sistema só está retornando as pressões de fundo de poço
+        # Você pode alterar isso se quiser, eu diminui, pois só estava analisando essas
+        # E precisava diminuir o tempo de cálculo das Hessianas
         outputs = ca.vertcat(Pbh1, Pbh2)
 
         return ca.Function('f_modelo', [x, par], [outputs, x_new], ['x', 'par'], ['outputs', 'x_new'])
     
     def caPredFunction(self):
+        # Modelo utilizado pelo controlador MPC
+        # Retorna uma função casadi que retorna o trend já no tamanho de P pontos
         x0 = ca.MX.sym('x0', self.nX*self.m, 1)  # Vetor de estados iniciais
         u0 = ca.MX.sym('u0', self.nU*self.m, 1)  # Vetor de parâmetros de controle iniciais
         dU = ca.MX.sym('dU', self.nU*self.m, 1)  # Variação dos parâmetros de controle
@@ -272,10 +287,10 @@ class RiserModel:
 
         for j in range(self.p):
             if j < self.m:
-                u0_curr = ca.vertcat(u0_curr, u0_curr[-2] + dU[2*j])
-                u0_curr = ca.vertcat(u0_curr, u0_curr[-1] + dU[2*j+1])
-                u0_curr = u0_curr[2:]
-            par = ca.vertcat(u0_curr[-2], u0_curr[-1])  # Concatenando os parâmetros de controle
+                u0_curr = ca.vertcat(u0_curr, u0_curr[-self.nU] + dU[self.nU*j])
+                u0_curr = ca.vertcat(u0_curr, u0_curr[-self.nU] + dU[self.nU*j+1])
+                u0_curr = u0_curr[self.nU:]
+            par = ca.vertcat(u0_curr[-self.nU], u0_curr[-self.nU+1])  # Concatenando os parâmetros de controle
             outputs, init_x = self.f_modelo(init_x, par)
             y = ca.vertcat(y, outputs)
             x = ca.vertcat(x, init_x)
@@ -287,20 +302,23 @@ class RiserModel:
         return out_trend
     
     def pPlanta(self, x0, dU):
+        # Modelo da planta 
+        # é importante colocar uma perturbação na planta 
+        # para evitar ser um controlador nominal
         self.x = []
         self.y = []
         init_x = x0[-self.nX:]  # Últimos estados iniciais
 
         for j in range(self.p):
             if j < self.m:
-                self.u0.append(self.u0[-2] + dU[2*j])
-                self.u0.append(self.u0[-1] + dU[2*j+1])
-            par = np.array([self.u0[-2], self.u0[-1]])
+                self.u0.append(self.u0[-self.nU] + dU[self.nU*j])
+                self.u0.append(self.u0[-self.nU] + dU[self.nU*j+1])
+            par = np.array([self.u0[-self.nU], self.u0[-self.nU+1]])
             outputs, init_x = self.f_modelo(init_x, par)
             self.y.append(outputs.full().flatten())
             self.x.append(init_x.full().flatten())
             if j < self.m:
-                self.u.append([self.u0[-2], self.u0[-1]])
+                self.u.append([self.u0[-self.nU], self.u0[-self.nU+1]])
             
         self.y = np.array(self.y).reshape(-1,1)
         self.x = np.array(self.x).reshape(-1, 1)
@@ -308,7 +326,8 @@ class RiserModel:
         return self.y, self.x, self.uk
     
     def pIniciais(self):
-        u0 = [2.5]*self.m*self.nU
+        # Pontos iniciais para começar a simulação
+        u0 = [self.injInit]*self.m*self.nU
         x0 = np.array([3000, 3000, 800, 800, 6000, 6000, 130, 700])  # Estados iniciais
 
         t0 = 1
@@ -329,7 +348,8 @@ class RiserModel:
         return y0, x0, u0
     
     def setPoints(self, nSP):
-
+        # Setpoints para o controle, não estou usando no código atualmente
+        # Defina os setpoints manualmente no nmpc.py
         def fun_wrap(x, par1, par2):
             x_casadi = ca.DM(x)
             result_casadi = self.fun(x_casadi, [par1, par2])
