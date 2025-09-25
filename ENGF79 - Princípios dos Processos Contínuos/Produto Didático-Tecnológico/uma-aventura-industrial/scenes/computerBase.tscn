@@ -1,0 +1,66 @@
+[gd_scene load_steps=9 format=3 uid="uid://he0mgr13i5wx"]
+
+[ext_resource type="Script" uid="uid://do5avgqhgis4r" path="res://scripts/computer.gd" id="1_8pqrt"]
+[ext_resource type="Texture2D" uid="uid://byff475recf5x" path="res://industrialTileset/4 Animated objects/Screen2.png" id="2_8pqrt"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7ikar"]
+atlas = ExtResource("2_8pqrt")
+region = Rect2(0, 0, 32, 42)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_tjrug"]
+atlas = ExtResource("2_8pqrt")
+region = Rect2(32, 0, 32, 42)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_uiul0"]
+atlas = ExtResource("2_8pqrt")
+region = Rect2(64, 0, 32, 42)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ruko6"]
+atlas = ExtResource("2_8pqrt")
+region = Rect2(96, 0, 32, 42)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_k4214"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7ikar")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_tjrug")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_uiul0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ruko6")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_8pqrt"]
+size = Vector2(46, 44)
+
+[node name="ComputerBase" type="StaticBody2D"]
+script = ExtResource("1_8pqrt")
+interaction_text = null
+event_id = null
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_k4214")
+animation = &"idle"
+
+[node name="Area2D" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+position = Vector2(0, -1)
+shape = SubResource("RectangleShape2D_8pqrt")
+
+[node name="InteractionBox" type="Label" parent="."]
+offset_left = -10.0
+offset_top = -37.0
+offset_right = 11.0
+offset_bottom = -14.0
+text = "E"
+horizontal_alignment = 1

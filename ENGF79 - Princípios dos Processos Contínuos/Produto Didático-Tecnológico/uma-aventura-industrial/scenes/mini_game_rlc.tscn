@@ -1,0 +1,165 @@
+[gd_scene load_steps=7 format=3 uid="uid://ciy0uqvh2lm82"]
+
+[ext_resource type="Script" uid="uid://hhxpp04d0qyk" path="res://scripts/mini_game_rlc.gd" id="1_pgiha"]
+[ext_resource type="FontFile" uid="uid://ba4dmi7v5qau0" path="res://ui/fonts/upheavtt.ttf" id="2_c2qog"]
+[ext_resource type="Script" uid="uid://lgxgbo3vk6rx" path="res://scripts/graph.gd" id="2_y38fm"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_y38fm"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_c2qog"]
+bg_color = Color(0.19434926, 0.19434929, 0.19434917, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.6, 0.6, 0.6, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pgiha"]
+
+[node name="miniGameRLC" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_left = -251.0
+offset_top = -150.0
+offset_right = -211.0
+offset_bottom = -110.0
+script = ExtResource("1_pgiha")
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 6.2500005
+anchor_bottom = 4.6270003
+offset_right = -1.5258789e-05
+offset_bottom = -35.080017
+theme_override_styles/panel = SubResource("StyleBoxFlat_y38fm")
+
+[node name="Panel" type="Panel" parent="Panel"]
+layout_mode = 0
+offset_left = 261.0
+offset_right = 390.0
+offset_bottom = 150.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_c2qog")
+
+[node name="slider_R" type="HSlider" parent="Panel"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 264.0
+offset_top = -59.0
+offset_right = 384.0
+offset_bottom = -43.0
+grow_vertical = 2
+size_flags_horizontal = 6
+theme_override_styles/slider = SubResource("StyleBoxFlat_pgiha")
+max_value = 50.0
+step = 0.1
+value = 10.0
+tick_count = 100
+ticks_position = 3
+
+[node name="slider_L" type="HSlider" parent="Panel"]
+layout_mode = 1
+anchors_preset = -1
+anchor_top = -0.41400003
+anchor_right = 1.4310001
+anchor_bottom = 1.187
+offset_left = 264.0
+offset_top = 122.100006
+offset_right = 26.24997
+offset_bottom = -102.05
+size_flags_horizontal = 6
+theme_override_styles/slider = SubResource("StyleBoxFlat_pgiha")
+min_value = 0.01
+max_value = 5.0
+step = 0.01
+value = 1.0
+tick_count = 100
+ticks_position = 3
+
+[node name="slider_C" type="HSlider" parent="Panel"]
+layout_mode = 1
+anchors_preset = -1
+anchor_top = -0.41400003
+anchor_right = 1.4310001
+anchor_bottom = 1.187
+offset_left = 264.0
+offset_top = 166.1
+offset_right = 26.24997
+offset_bottom = -58.050003
+size_flags_horizontal = 6
+theme_override_styles/slider = SubResource("StyleBoxFlat_pgiha")
+min_value = 0.01
+max_value = 1.0
+step = 0.001
+value = 0.01
+tick_count = 100
+ticks_position = 3
+
+[node name="Button" type="Button" parent="Panel"]
+layout_mode = 0
+offset_left = 1.0
+offset_top = 153.0
+offset_right = 75.0
+offset_bottom = 184.0
+theme_override_fonts/font = ExtResource("2_c2qog")
+text = "Sair"
+
+[node name="Graph" type="Node2D" parent="Panel"]
+script = ExtResource("2_y38fm")
+
+[node name="LabelR" type="Label" parent="Panel"]
+layout_mode = 0
+offset_left = 277.0
+offset_top = 35.0
+offset_right = 297.0
+offset_bottom = 58.0
+theme_override_fonts/font = ExtResource("2_c2qog")
+text = "R"
+
+[node name="LabelL" type="Label" parent="Panel"]
+layout_mode = 0
+offset_left = 277.0
+offset_top = 79.0
+offset_right = 297.0
+offset_bottom = 102.0
+theme_override_fonts/font = ExtResource("2_c2qog")
+text = "L"
+
+[node name="LabelC" type="Label" parent="Panel"]
+layout_mode = 0
+offset_left = 277.0
+offset_top = 123.0
+offset_right = 297.0
+offset_bottom = 146.0
+theme_override_fonts/font = ExtResource("2_c2qog")
+text = "C"
+
+[node name="Sistema" type="Label" parent="Panel"]
+layout_mode = 0
+offset_left = 105.0
+offset_top = 135.0
+offset_right = 249.0
+offset_bottom = 158.0
+theme_override_fonts/font = ExtResource("2_c2qog")
+text = "Sobreamortecido"
+horizontal_alignment = 2
+
+[node name="i(t) [A]" type="Label" parent="Panel"]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 2.0
+offset_right = 67.0
+offset_bottom = 25.0
+theme_override_fonts/font = ExtResource("2_c2qog")
+text = "i(t) [A]"
+
+[node name="t [s]" type="Label" parent="Panel"]
+layout_mode = 0
+offset_left = 202.0
+offset_top = 55.0
+offset_right = 249.0
+offset_bottom = 78.0
+theme_override_fonts/font = ExtResource("2_c2qog")
+text = "t [s]"
