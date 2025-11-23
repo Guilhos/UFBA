@@ -5,7 +5,6 @@ Created on Wed Oct 16 14:13:27 2024
 @author: rodri
 """
 import numpy as np
-from builtins import sum
 
 class CompressorClass:
     def __init__(self, N=0):

@@ -6,10 +6,9 @@ Created on Mon Nov 11 15:49:34 2024
 """
 
 from casadi import *
-from numpy import exp, log, array, roots, isnan, fromstring
+from numpy import exp, log, array, roots, isnan, fromstring, sum
 from scipy.optimize import fsolve
 from libs.species_builder import R, Species, Mixture
-from builtins import sum
 
 list_maintain = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 27, 28, 29, 30]
 

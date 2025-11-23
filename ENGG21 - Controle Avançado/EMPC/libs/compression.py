@@ -9,7 +9,6 @@ from scipy.optimize import fsolve, minimize
 from matplotlib.pyplot import plot, figure
 from matplotlib.ticker import AutoMinorLocator, ScalarFormatter
 from casadi import *
-from builtins import sum
 import pdb; 
 
 def config_plot(axes):

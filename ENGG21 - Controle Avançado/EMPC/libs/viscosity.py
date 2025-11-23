@@ -7,7 +7,6 @@ Created on Fri Oct 18 16:14:47 2024
 import casadi as ca
 from numpy import exp, log, array, roots, zeros, linalg, abs
 from casadi import horzsplit
-from builtins import sum
 
 class viscosity:
     
