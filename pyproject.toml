@@ -5,9 +5,12 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+<<<<<<< HEAD
     "casadi>=3.7.2",
     "control>=0.10.2",
     "cvxpy>=1.7.3",
+=======
+>>>>>>> 84203c89614eb39276044a7e35ff448beb5dbae8
     "scipy>=1.16.2",
     "streamlit>=1.49.1",
 ]

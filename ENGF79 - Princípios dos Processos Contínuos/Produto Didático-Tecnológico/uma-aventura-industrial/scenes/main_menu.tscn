@@ -1,0 +1,114 @@
+[gd_scene load_steps=10 format=3 uid="uid://bdiwu2o5art3"]
+
+[ext_resource type="Script" uid="uid://7o3c365blidv" path="res://scripts/main_menu.gd" id="1_oa1go"]
+[ext_resource type="Texture2D" uid="uid://3c3n8ur6b1cv" path="res://industrialTileset/2 Background/Background.png" id="2_tbmy8"]
+[ext_resource type="Texture2D" uid="uid://cornkjs3lo71n" path="res://ui/logoAventuraIndustrial.png" id="3_jk1qb"]
+[ext_resource type="FontFile" uid="uid://ba4dmi7v5qau0" path="res://ui/fonts/upheavtt.ttf" id="4_5dd4i"]
+[ext_resource type="StyleBox" uid="uid://cv8tva01rlwqa" path="res://ui/Styles/buttonSimple.tres" id="5_lgwnu"]
+[ext_resource type="StyleBox" uid="uid://es6hfd8hvw1v" path="res://ui/Styles/buttonPressed.tres" id="6_flqon"]
+[ext_resource type="StyleBox" uid="uid://clmihwloutqyl" path="res://ui/Styles/buttonHover.tres" id="7_rcqid"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_j5v2v"]
+texture = ExtResource("2_tbmy8")
+
+[sub_resource type="Theme" id="Theme_iotk1"]
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_oa1go")
+
+[node name="Background" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_styles/panel = SubResource("StyleBoxTexture_j5v2v")
+
+[node name="Logo" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -151.5
+offset_top = 130.0
+offset_right = 151.5
+offset_bottom = 314.0
+grow_horizontal = 2
+texture = ExtResource("3_jk1qb")
+expand_mode = 1
+
+[node name="Menu" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -80.5
+offset_top = 13.5
+offset_right = 83.0
+offset_bottom = 114.5
+grow_horizontal = 2
+grow_vertical = 2
+theme = SubResource("Theme_iotk1")
+theme_override_constants/separation = 13
+alignment = 1
+
+[node name="novo_jogo" type="Button" parent="Menu" groups=["buttonMenu"]]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("4_5dd4i")
+theme_override_styles/normal = ExtResource("5_lgwnu")
+theme_override_styles/pressed = ExtResource("6_flqon")
+theme_override_styles/hover = ExtResource("7_rcqid")
+text = "Novo Jogo"
+expand_icon = true
+
+[node name="continuar" type="Button" parent="Menu" groups=["buttonMenu"]]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("4_5dd4i")
+theme_override_styles/normal = ExtResource("5_lgwnu")
+theme_override_styles/pressed = ExtResource("6_flqon")
+theme_override_styles/hover = ExtResource("7_rcqid")
+text = "Continuar"
+expand_icon = true
+
+[node name="sair" type="Button" parent="Menu" groups=["buttonMenu"]]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("4_5dd4i")
+theme_override_styles/normal = ExtResource("5_lgwnu")
+theme_override_styles/pressed = ExtResource("6_flqon")
+theme_override_styles/hover = ExtResource("7_rcqid")
+text = "Sair"
+expand_icon = true
+
+[node name="Made by" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -157.0
+offset_top = -49.0
+offset_right = 157.0
+offset_bottom = -9.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="Dev" type="Label" parent="Made by"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("4_5dd4i")
+text = "Desenvolvido por:"
+
+[node name="DevGuilhos" type="Button" parent="Made by" groups=["buttonMenu"]]
+modulate = Color(1, 1, 0, 1)
+layout_mode = 2
+focus_mode = 0
+theme_override_fonts/font = ExtResource("4_5dd4i")
+text = "Guilherme Freire"
+flat = true
