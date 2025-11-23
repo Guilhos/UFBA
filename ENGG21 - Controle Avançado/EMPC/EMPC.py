@@ -145,10 +145,11 @@ class EMPC:
                 x_plant[i*3:(i+1)*3] = np.array([resPlant['T_sol'][:,i], resPlant['V_sol'][:,i], resPlant['w_sol'][:,i]])
             z_plant = resPlant['z_sol'].T
             
+            # Matrizes de visualização
             self.y_value[:,k] = np.array([resPlant["T_sol"][:,0], resPlant["z10"], resPlant["z11"]]).flatten()
             self.u_value[:,k] = u_plant.flatten() 
 
-            ## Passo a frente
+            ## Passo a frente no modelo
             x_mpc = self.Atil @ x_k + self.Btil @ deltaU_mpc[:,k].reshape(-1,1)
             y_mpc = self.Ctil @ x_k + self.Dtil @ deltaU_mpc[:,k].reshape(-1,1)
 
@@ -160,7 +161,7 @@ class EMPC:
             z_k = np.block([[x_k], [y_sp]])
 
     def kalmanFilter(self, iter = 100):
-        covMedido = .1
+        covMedido = .5
         covSistema = .5
         sM = self.Atil.shape
         PP = np.eye(sM[1])
@@ -224,7 +225,7 @@ if __name__ == "__main__":
     # Configurações do Controlador:
     p = 10 # Horizonte de Predição
     m = 3 # Horizonte de Controle
-    Q = np.eye(model.nY) # Peso das Saídas
+    Q = np.diag([1,1,10]) # Peso das Saídas
     R = np.eye(model.nU) # Peso das Entradas
     iter = 10 # Pontos para simulação do controlador
 
