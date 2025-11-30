@@ -40,8 +40,7 @@ class SimuladorDuto:
 
         y_current, z_current = y0, z0
 
-        for i in range(1, self.n_steps):
-
+        for i in range(0, self.n_steps):
             if i == 300:
                 u_current[0] = 700.0
             elif i == 600:

@@ -106,7 +106,7 @@ class EMPC:
         yMax = np.tile(np.ones((self.model.nY,1)), (self.p,1))
         yMin = np.tile(-np.ones((self.model.nY,1)), (self.p,1))
         uMax = np.tile(np.ones((self.model.nU,1)), (self.m,1))
-        uMin = np.tile(-np.ones((self.model.nU,1)), (self.m,1))
+        uMin = np.tile(-np.array([[-0.1],[1],[1],[1]]), (self.m,1))
         dUMax = np.tile(np.ones((self.model.nU,1))/5, (self.m,1))
 
         w = np.block([[yMax],
@@ -153,12 +153,9 @@ class EMPC:
             x_mpc = self.Atil @ x_k + self.Btil @ deltaU_mpc[:,k].reshape(-1,1)
             y_mpc = self.Ctil @ x_k + self.Dtil @ deltaU_mpc[:,k].reshape(-1,1)
 
-            if k == 5:
-                print("test")
-
             ## Estimação de estados com filtro de Kalman
             x_k = x_mpc + KF @ (self.model.normalize(self.y_value[:,k], 'y') - y_mpc)
-            z_k = np.block([[x_k], [y_sp]])
+            z_k = np.block([[x_k], [y_sp]])             
 
     def kalmanFilter(self, iter = 100):
         covMedido = .5
@@ -225,7 +222,7 @@ if __name__ == "__main__":
     # Configurações do Controlador:
     p = 10 # Horizonte de Predição
     m = 3 # Horizonte de Controle
-    Q = np.diag([1,1,10]) # Peso das Saídas
+    Q = np.diag([1,5,10]) # Peso das Saídas
     R = np.eye(model.nU) # Peso das Entradas
     iter = 10 # Pontos para simulação do controlador
 

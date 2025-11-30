@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 
 class linDiscretizeComp():
     def __init__(self):
-        self.dt = 60
+        self.dt = 600
         self.list_names = ["CH4", "C2H6", "C3H8", "iC4H10", "nC4H10", "iC5H12", "nC5H12", 
                   "nC6H14", "nC7H16", "nC8H18", "nC9H20", "nC10H22", "nC11H24", 
                    "nC12H26", "nC14H30", "N2", "H2O", "CO2", "C15+"]
