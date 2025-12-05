@@ -321,22 +321,22 @@ if __name__ == "__main__":
     # Configurações do Controlador:
     p = 15 # Horizonte de Predição
     m = 5 # Horizonte de Controle
-    Q = np.diag([10,50,50,0]) # Peso das Saídas
+    Q = np.diag([0,0,75,0]) # Peso das Saídas
     R = np.diag([50]) # Peso das Entradas
     gamma = 0.01 # Peso da Parcela Econômica
-    iter = 72 # Pontos para simulação do controlador
+    iter = 480 # Pontos para simulação do controlador
 
     # Mudança nas restrições do set point (DEVE SER DEFINIDA ANTES DE TENTAR CARREGAR)
-    yspMaxList = np.ones((p*model.nY, iter))/2
-    yspMinList = -np.ones((p*model.nY, iter))/2
+    yspMaxList = np.ones((p*model.nY, iter))/5
+    yspMinList = -np.ones((p*model.nY, iter))/20
 
-    for i in range(iter):
-        yspMaxList[3::model.nY, i] = -1
-        yspMinList[3::model.nY, i] = -1
-        if i > 6 and i <= 30:
-            yspMinList[2::model.nY, i] = 0.1
-        if i > 36 and i <= 66:
-            yspMaxList[1::model.nY, i] = 0.1
+    # for i in range(iter):
+    #     yspMaxList[3::model.nY, i] = -1
+    #     yspMinList[3::model.nY, i] = -1
+    #     if i > 6 and i <= 30:
+    #         yspMinList[2::model.nY, i] = 0.1
+    #     if i > 36 and i <= 66:
+    #         yspMaxList[1::model.nY, i] = 0.1
     
     EMPC = EMPC(model, p, m, Q, R, gamma)
 
