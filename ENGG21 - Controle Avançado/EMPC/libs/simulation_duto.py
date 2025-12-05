@@ -12,8 +12,8 @@ class SimuladorDuto:
 
     def run(self, y0, z0, u0):
         y = ca.SX.sym("y", 3 * self.sistema.n_points)
-        z = ca.SX.sym("z", 11)  # <- z tem 11 elementos: índices 0..10
-        u = ca.SX.sym("u", 4)
+        z = ca.SX.sym("z", 12)  # <- z tem 11 elementos: índices 0..10
+        u = ca.SX.sym("u", 1)
         t = ca.SX.sym("t")
 
         dydt, alg_eqs = self.sistema.evaluate_dae(t, y, z, u)
@@ -41,13 +41,6 @@ class SimuladorDuto:
         y_current, z_current = y0, z0
 
         for i in range(0, self.n_steps):
-            if i == 300:
-                u_current[0] = 700.0
-            elif i == 600:
-                u_current[0] = 670.0
-            elif i == 900:
-                u_current[0] = 750.0
-
             sol = self.integrador(x0=ca.DM(y_current), z0=ca.DM(z_current), p=ca.DM(u_current))
             y_current = np.array(sol["xf"]).flatten()
             z_current = np.array(sol["zf"]).flatten()
@@ -86,7 +79,8 @@ class SimuladorDuto:
             "m_dot": m_dot_sol,
             "z_sol": z_sol,
             "z10": z_sol[:, 9],   # penúltima variável algébrica
-            "z11": z_sol[:, 10]   # última variável algébrica
+            "z11": z_sol[:, 10],
+            "potencia": z_sol[:, 11]   # última variável algébrica
         }
 
         return self.resultados
@@ -105,6 +99,7 @@ class SimuladorDuto:
 
         z10 = self.resultados["z10"]
         z11 = self.resultados["z11"]
+        z12 = self.resultados["potencia"]
 
         n_points = self.sistema.n_points
 
@@ -176,5 +171,14 @@ class SimuladorDuto:
         plt.plot(t_h, z11, linewidth=2, color="purple")
         plt.xlabel("Tempo / h")
         plt.ylabel("z[11]")
+        plt.grid(True)
+        plt.show()
+
+        # --- z[11] ---
+        plt.figure(figsize=(9, 6))
+        plt.title("Evolução da Pressão na Saída do Duto")
+        plt.plot(t_h, z12, linewidth=2, color="purple")
+        plt.xlabel("Tempo / h")
+        plt.ylabel("z[12]")
         plt.grid(True)
         plt.show()

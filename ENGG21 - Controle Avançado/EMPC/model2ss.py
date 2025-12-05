@@ -15,7 +15,21 @@ import matplotlib.pyplot as plt
 
 class linDiscretizeComp():
     def __init__(self):
+        """
+        Para usar os códigos do MPC, essa classe deve conter as seguintes partes principais:
+        - O sistema discreto de Espaço de Estados -> Aqui o Sys.D
+        - Os pontos estacionários onde o sistema foi linearizado -> Aqui os x_ss, z_ss, u_ss e y_ss
+        - As respectivas dimensões das variáveis -> Aqui o nX, nZ, nU e nY
+        - O tempo amostral -> Aqui o dt
+        - A planta que você irá utilizar -> Aqui o plant
+        
+        Esse código, da forma que está, apenas funciona caso o sistema seja fenomenológico e compatível com Casadi, mas é possível usar com outras ferramentas,
+        porém é necessário mudar a forma de linearização e como você cumpre as necessidades listadas acima
+        """
         self.dt = 600
+
+        # SEU MODELO --- Utilizado como exemplo: Compressor + Duto
+        ## Obs.: Coloque os arquivos necessários na pasta 'libs', por questão de organização
         self.list_names = ["CH4", "C2H6", "C3H8", "iC4H10", "nC4H10", "iC5H12", "nC5H12", 
                   "nC6H14", "nC7H16", "nC8H18", "nC9H20", "nC10H22", "nC11H24", 
                    "nC12H26", "nC14H30", "N2", "H2O", "CO2", "C15+"]
@@ -33,44 +47,67 @@ class linDiscretizeComp():
         self.gas = gc_eos_class(self.mixture, 300, 4000, None, 1, 0, Aij, self.volumn_desviation, 'gas')
         visc = viscosity(self.mixture, self.volumn_desviation)
         self.D = 0.42
-        # Criar instância do duto com os parâmetros necessários  # ajuste conforme seu import real
+        ### Criar instância do duto com os parâmetros necessários  # ajuste conforme seu import real
 
-        # Número de nós (comprimento de self.l)
+        ### Número de nós (comprimento de self.l)
         self.comp = CompressorClass()
         self.compressor = compression(self.gas, self.comp, visc)
 
         self.meu_sistema = duto_casadi(self.gas, visc, compressor=self.compressor, Lc=100000.0, D=0.42)
+        
+        self.CustoW = 0.00091 # [=] R$/Wh
+
         # --- Condições iniciais ---
+        x0 = np.empty(self.meu_sistema.n_points * 3)
+
         T0 = [331.11488872, 331.03855994, 330.88678422, 330.66133717, 330.36492314, 330.00125445, 329.57511687, 329.0924697, 328.56054495, 327.98795287, 327.38477399, 326.76262096, 326.13464356, 325.51544488, 324.92086969, 324.36762591, 323.87270874, 323.45261962, 323.12241303, 322.89464857, 322.77838627]
         V0 = [0.42909151, 0.43015709, 0.4322893, 0.4354898, 0.43975979, 0.44509723, 0.45149414, 0.45893212, 0.46737692, 0.47677125, 0.48702615, 0.49801102, 0.50954311, 0.52137775, 0.53320164, 0.54463245, 0.5552283, 0.56451055, 0.57200092, 0.57727063, 0.57999387]
         w0 = [6.08904527, 6.1041665, 6.13442364, 6.1798406, 6.2404341, 6.31617523, 6.40695091, 6.51249996, 6.6323363, 6.76564704, 6.91116972, 7.06705115, 7.2306979, 7.3986379, 7.56642544, 7.7286349, 7.87899586, 8.01071621, 8.11700869, 8.19178876, 8.23043304]
-        gas_temp = self.gas.copy_change_conditions(T0[-1], None, V0[-1], 'gas')
-        x0 = np.empty(self.meu_sistema.n_points * 3)
+
         x0[0::3] = T0
         x0[1::3] = V0
         x0[2::3] = w0
+
         x0 = np.array(x0, dtype=float)
+
         z_sol = np.array([np.float64(315.2537249764181), np.float64(0.5140220753802803), np.float64(314.5709878533226), np.float64(0.5286213067888118), np.float64(325.80262286526374), np.float64(0.4200226196815633), np.float64(331.1148887181076), np.float64(0.4290915096513539), np.float64(0.583790379032516)])
+        gas_temp = self.gas.copy_change_conditions(T0[-1], None, V0[-1], 'gas')
         MM = gas_temp.mixture.MM_m  
         v_kg = z_sol[7] / MM
         rho = 1 / v_kg
-        z0 = np.hstack((z_sol, [rho * np.pi * (self.D / 2)**2 * w0[0], gas_temp.P]))
-        u0 = np.array([600, 4000, 300 , (w0[-1] * np.pi * (self.D / 2)**2) ])
+        print(w0[-1] * np.pi * (self.D / 2)**2)
+        
+        u0 = np.array([600])
 
+        self.compressor.compressor.update_speed(u0[0])
+        self.potencia_inicial = self.compressor.compressor.Ah_ideal
+
+        z0 = np.hstack((z_sol, [rho * np.pi * (self.D / 2)**2 * w0[0], gas_temp.P, self.potencia_inicial*(rho * np.pi * (self.D / 2)**2 * w0[0])*600/1000*0.000277778]))
+
+        ## As condições iniciais do sistemas são dadas por x0, z0 e u0
+
+        # DIMENSÕES DAS VARIÁVEIS
         self.nX = x0.shape[0]
         self.nZ = z0.shape[0]
         self.nU = u0.shape[0]
-        self.nY = 3 # Apenas 3 saídas algébricas: Temperatura na saída do compressor, Vazão mássica no compressor e Pressão no final do duto
+        self.nY = 4 # No sistema em exemplo, quero extrair apenas 4 saídas
 
-        self.Cz = np.zeros((self.nY, self.nZ))
-        self.outputIndex = [-5,-2,-1]
-        for i in range(self.nY):
-            self.Cz[i,self.outputIndex[i]] = 1
-
+        # FILTRO DE SAÍDAS DO ESPAÇO DE ESTADOS
+        ## Estados diferenciais
         self.Cx = np.eye(self.nX)
 
+        ## Estados algébricos
+        self.Cz = np.zeros((self.nY, self.nZ))
+        self.outputIndex = [-6,-3,-2,-1]
+        for i in range(self.nY):
+            self.Cz[i,self.outputIndex[i]] = 1 ## Aqui apenas coleto as saídas algébricas nas posições outputIndex
+
+        ### Obs.: Dependendo da forma que você diz que esses estados serão medidos, você deverá alterar a lógica da matriz C
+
+        # PLANTA DO SEU SISTEMA
         self.plant = SimuladorDuto(self.meu_sistema, dt=self.dt, n_steps=1)
 
+        # ARQUIVO PARA ARMAZENAR O ESPAÇO DE ESTADO E ESTADOS ESTACIONÁRIOS, PARA NÂO FICAR RODANDO O SISTEMA NOVAMENTE TODA VEZ
         pickle_filename = "C:/Users/guilh/OneDrive/Documents/Workspace/UFBA/ENGG21 - Controle Avançado/EMPC/libs/estEstacionario.pkl"
 
         if os.path.exists(pickle_filename):
@@ -106,18 +143,21 @@ class linDiscretizeComp():
                 pickle.dump(data_to_save, f)
 
     def linearize(self):
+        # LINEARIZAÇÂO DO SISTEMA
         x_sym = SX.sym('x', 3*self.meu_sistema.n_points)
-        z_sym = SX.sym('z', 11)
-        u_sym = SX.sym('u', 4)
+        z_sym = SX.sym('z', 12)
+        u_sym = SX.sym('u', 1)
         t = ca.SX.sym("t")
 
+        ## Sistema simbólico
         dydt, alg_eqs = self.meu_sistema.evaluate_dae(t, x_sym, z_sym, u_sym)
         dae = {"x": x_sym, "z": z_sym, "p": u_sym, "ode": dydt, "alg": alg_eqs}
 
         f_expr = dae['ode']
         g_expr = dae["alg"]
 
-        # EDOs
+        # Série de Taylor de Primeira Ordem
+        ## EDOs
         Axx_sym = ca.jacobian(f_expr, x_sym) # df/dx
         Axz_sym = ca.jacobian(f_expr, z_sym) # df/dz
         Bx_sym = ca.jacobian(f_expr, u_sym) # df/du
@@ -126,7 +166,7 @@ class linDiscretizeComp():
         eval_Axz = ca.Function('eval_Axz', [x_sym, z_sym, u_sym], [Axz_sym])
         eval_Bx = ca.Function('eval_Bx', [x_sym, z_sym, u_sym], [Bx_sym])
 
-        # ALG
+        ## ALG
         Azx_sym = ca.jacobian(g_expr, x_sym) # dg/dx
         Azz_sym = ca.jacobian(g_expr, z_sym) # dg/dz
         Bz_sym = ca.jacobian(g_expr, u_sym) # dg/du
@@ -135,29 +175,32 @@ class linDiscretizeComp():
         eval_Azz = ca.Function('eval_Axz', [x_sym, z_sym, u_sym], [Azz_sym])
         eval_Bz = ca.Function('eval_Bx', [x_sym, z_sym, u_sym], [Bz_sym])
 
+        # Matrizes no ponto de estado estacionário
         Axx = np.squeeze(eval_Axx(self.x_ss, self.z_ss, self.u_ss))
         Axz = np.squeeze(eval_Axz(self.x_ss, self.z_ss, self.u_ss))
-        Bx = np.squeeze(eval_Bx(self.x_ss, self.z_ss, self.u_ss))
+        Bx = np.squeeze(eval_Bx(self.x_ss, self.z_ss, self.u_ss)).reshape(-1,1)
         Azx = np.squeeze(eval_Azx(self.x_ss, self.z_ss, self.u_ss))
         Azz = np.squeeze(eval_Azz(self.x_ss, self.z_ss, self.u_ss))
-        Bz = np.squeeze(eval_Bz(self.x_ss, self.z_ss, self.u_ss))
+        Bz = np.squeeze(eval_Bz(self.x_ss, self.z_ss, self.u_ss)).reshape(-1,1)
 
         # dotX = Axx @ X + Axz @ Z + Bx @ U
         # 0 = Azx @ X + Azz @ Z + Bz @ U
         # Z = - Azz^{-1} @ Azx @ X - Azz^{-1} @ Bz @ U
         # dotX = (Axx - Axz @ Azz^{-1} @ Azx) @ X + (Bx - Axz @ Azz^{-1} @ Bz) @ U
 
+        # Espaço de Estados no contínuo posicional
         Ac = Axx - (Axz @ np.linalg.inv(Azz) @ Azx)
         Bc = Bx - Axz @ np.linalg.inv(Azz) @ Bz
-        Cc = np.block([[-self.Cz @ np.linalg.inv(Azz) @ Azx]]) # Caso queira o X como saída colocar np.block([[self.Cx], [-self.Cz @ np.linalg.inv(Azz) @ Azx]])
+        Cc = np.block([[-self.Cz @ np.linalg.inv(Azz) @ Azx]]) # Caso queira os Estados Diferenciais (X) como saída colocar np.block([[self.Cx], [-self.Cz @ np.linalg.inv(Azz) @ Azx]])
         Dc = np.block([[-self.Cz @ np.linalg.inv(Azz) @ Bz]])  # e nessa linha colocar np.block([[np.zeros((self.nX, self.nU))], [-self.Cz @ np.linalg.inv(Azz) @ Bz]])      
 
         return Ac, Bc, Cc, Dc
 
     def discretize(self, linSys):
+        # DISCRETIZAÇÃO DO SISTEMA
         Ac, Bc, Cc, Dc = linSys
 
-        # Normalização
+        ## Normalização - Da forma que está -> Normaliza valores para [-1,1], sendo o ss -> 0, 2*ss -> 1, 0 -> -1. Dessa forma, colocar em desvio fica mais simples.
         Dx = numpy.diag(self.x_ss.flatten())
         Du = numpy.diag(self.u_ss.flatten())
         Dy = numpy.diag(self.y_ss.flatten())
@@ -167,19 +210,21 @@ class linDiscretizeComp():
         C_ = numpy.linalg.inv(Dy) @ Cc @ Dx
         D_ = numpy.linalg.inv(Dy) @ Dc @ Du
 
+        ## Discretização do Espaço de Estados Normalizados
         sys_c = ctrl.ss(A_,B_,C_,D_)
         sys_d = ctrl.c2d(sys_c,self.dt, method = 'zoh')
         A, B, C, D = ctrl.ssdata(sys_d)
 
-        # Incremental:
+        ## Incremental:
         Atil = np.block([[A,B],[np.zeros((self.nU,self.nX)), np.eye(self.nU)]])
         Btil = np.block([[B],[np.eye(self.nU)]])
         Ctil = np.block([[C, D]])
         Dtil = D.copy()
 
-        return Atil, Btil, Ctil, Dtil, A, B, C, D
+        return Atil, Btil, Ctil, Dtil, A, B, C, D # Essa função deve retornar o sistema em Incremental e também em posicional caso D != 0.
     
-    def normalize(self, var, type = 'x'):
+    # FUNÇÕES AUXILIARES
+    def normalize(self, var, type = 'x'): # Normalizar entre [-1,1]
         var = var.reshape(-1,1)
         if type == 'x':
             var_ = var / self.x_ss - 1
@@ -189,7 +234,7 @@ class linDiscretizeComp():
             var_ = var / self.y_ss - 1
         return var_.reshape(-1,1)
     
-    def denormalize(self, var, type = 'x'):
+    def denormalize(self, var, type = 'x'): # Desnormalizar de [-1,1]
         var = var.reshape(-1,1)
         if type == 'x':
             var_ = self.x_ss * var + self.x_ss
@@ -199,7 +244,8 @@ class linDiscretizeComp():
             var_ = self.y_ss * var + self.y_ss
         return var_.reshape(-1,1)
     
-if __name__ == "__main__":
+# AVALIAÇÂO DO ESPAÇO DE ESTADOS ENCONTRADOS --- DEPRECATED!
+if __name__ == "__main__": 
     # --- Passo 1: Obtenção do sistema discretizado ---
     model = linDiscretizeComp()
     A, B, C, D = model.SysD

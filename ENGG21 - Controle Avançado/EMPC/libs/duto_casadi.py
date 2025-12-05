@@ -103,11 +103,9 @@ class duto_casadi:
         V1   = z[8]   
         m_dot_inicio = z[9]
         P_final = z[10]
+        pot_comp = z[11]
 
         rot = u[0] 
-        P1 = u[1]
-        T1 = u[2]
-        Q_final = u[3]
 
         A = np.pi * (self.D**2) / 4
 
@@ -117,15 +115,17 @@ class duto_casadi:
         m_dot = rho * A * w[0]
         a1, a2, a3, a4, a5, a6, a7, a8, a9 = self.compressor.character_dae(
             [Timp, Vimp, Tdif, Vdif, T2s, V2s, T2, V2, V1],
-            [rot, (m_dot)/4, P1, T1]   
+            [rot, (m_dot)/4, 4000, 300]   
         )
         a10 = m_dot_inicio - m_dot
         
         gas_temp = self.gas.copy_change_conditions(T[-1], None, V[-1], 'gas')
         
         a11 = P_final - gas_temp.P
+        self.compressor.compressor.update_speed(u[0])
+        a12= pot_comp - self.compressor.compressor.Ah_ideal*(rho * np.pi * (self.D / 2)**2 * w[0])*600/1000*0.000277778
 
-        w_final = Q_final/A
+        w_final = 1.1402790576678075/A
         dTdt, dVdt, dwdt = [], [], []
         for i in range(self.n_points):
             # Atualiza propriedades do gás
@@ -182,7 +182,7 @@ class duto_casadi:
         for i in range(self.n_points):
             dydt += [dTdt[i], dVdt[i], dwdt[i]]
         
-        alg = vertcat(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11)
+        alg = vertcat(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12)
 
         return vertcat(*dydt), alg
     
