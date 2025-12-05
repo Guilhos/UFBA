@@ -137,7 +137,7 @@ class EMPC:
 
         ## Vetores para visualização
         deltaU_value = np.zeros((self.m*self.model.nU, iter))
-        ysp_value = np.zeros((self.p*self.model.nY, iter))
+        self.ysp_value = np.zeros((self.p*self.model.nY, iter))
         deltaU_mpc = np.zeros((self.model.nU, iter))
         self.y_value = np.zeros((self.model.nY, iter))
         self.u_value = np.zeros((self.model.nU, iter))
@@ -145,9 +145,13 @@ class EMPC:
         # Loop do EMPC
         print(f'Iniciando simulação EMPC por {iter} iterações...')
         for k in range(iter):
+            ## Mudança nas restrições do setpoint
+            w[:self.p*self.model.nY] = self.yspMaxList[:,k].reshape(-1,1)
+            w[self.p*self.model.nY:2*self.p*self.model.nY] = -self.yspMinList[:,k].reshape(-1,1)
+
             ## Criação do problema de otimização
             Z = cp.Variable((self.m*self.model.nU + self.p*self.model.nY,1))
-            cost = cp.quad_form(Z,self.H) + 2 * np.block([[x_k.T @ self.psi.T @ self.Qtil @ self.thetaX + self.gamma @ self.L.T @ self.thetaX, - x_k.T @ self.psi.T @ self.Qtil ]]) @ Z
+            cost = cp.quad_form(Z,self.H) + 2 * np.block([[x_k.T @ self.psi.T @ self.Qtil @ self.thetaX + x_k.T @ self.psi.T @ self.L @ self.gamma @ self.L.T @ self.thetaX + self.gamma @ self.L.T @ self.thetaX, - x_k.T @ self.psi.T @ self.Qtil ]]) @ Z
             constraints = [self.G @ Z <= self.S @ x_k + w]
             prob = cp.Problem(cp.Minimize(cost), constraints)
             # Desabilitando verbose para maior velocidade, habilite se necessário
@@ -156,7 +160,18 @@ class EMPC:
             ## Coleta de resultados
             deltaU_value[:,k] = Z.value[:self.m*self.model.nU].flatten()
             deltaU_mpc[:,k] = deltaU_value[:self.model.nU, k]
-            ysp_value[:,k] = Z.value[self.m*self.model.nU:].flatten()
+            self.ysp_value[:,k] = Z.value[self.m*self.model.nU:].flatten()
+
+            ysp_opt = Z.value[self.m*self.model.nU:].flatten()
+            ysp_min_k = self.yspMinList[:self.model.nY, k]
+            ysp_max_k = self.yspMaxList[:self.model.nY, k]
+            
+            print(f"\nIteração {k}:")
+            print(f"ysp_min (normalizado): {ysp_min_k}")
+            print(f"ysp_max (normalizado): {ysp_max_k}")
+            print(f"ysp_opt (normalizado): {ysp_opt[:self.model.nY]}")
+            print(f"Violação inferior? {any(ysp_opt[:self.model.nY] < ysp_min_k)}")
+            print(f"Violação superior? {any(ysp_opt[:self.model.nY] > ysp_max_k)}")
 
             ## Passo na planta
             u_plant = u_plant + self.model.u_ss * deltaU_mpc[:,k].reshape(-1,1)
@@ -175,18 +190,14 @@ class EMPC:
 
             ## Estimação de estados com filtro de Kalman
             x_k = x_mpc + KF @ (self.model.normalize(self.y_value[:,k], 'y') - y_mpc)
-
-            ## Mudança nas restrições do setpoint
-            w[:self.p*self.model.nY] = self.yspMaxList[:,k].reshape(-1,1)
-            w[self.p*self.model.nY:2*self.p*self.model.nY] = -self.yspMinList[:,k].reshape(-1,1)
         
         print('Simulação concluída.')
         self.save_results()
         print(f'Resultados salvos em: {self.results_path}')
 
     def kalmanFilter(self, iter = 100):
-        covMedido = .5
-        covSistema = .5
+        covMedido = .25
+        covSistema = .75
         sM = self.Atil.shape
         PP = np.eye(sM[1])
         VV = np.eye(self.model.nY)*covMedido
@@ -250,9 +261,11 @@ class EMPC:
 
         ySPMaxDen = np.zeros((self.model.nY, self.iter))
         ySPMinDen = np.zeros((self.model.nY, self.iter))
+        ySPDen = np.zeros((self.model.nY, self.iter))
         for i in range(self.iter):
             ySPMaxDen[:,i] = self.model.denormalize(self.yspMaxList[:self.model.nY, i], 'y').flatten()
             ySPMinDen[:,i] = self.model.denormalize(self.yspMinList[:self.model.nY, i], 'y').flatten()
+            ySPDen[:,i] = self.model.denormalize(self.ysp_value[:self.model.nY, i], 'y').flatten()
 
         T2 = self.y_value[0]
         m_dot = self.y_value[1]
@@ -265,8 +278,6 @@ class EMPC:
 
         plt.figure(figsize=(20, 12))
         plt.plot(t, T2, label='Temperatura na saída do compressor / K', linewidth=5)
-        plt.plot(t, ySPMaxDen[0], label='Limites de SetPoint', linestyle='--', color='k', linewidth=5)
-        plt.plot(t, ySPMinDen[0], linestyle='--', color='k', linewidth=5)
         plt.ylabel('Temperatura na saída do compressor / K')
         plt.xlabel('Tempo / h')
         plt.grid(True)
@@ -276,8 +287,6 @@ class EMPC:
 
         plt.figure(figsize=(20, 12))
         plt.plot(t, m_dot, label=r'Vazão Mássica / kg/s', linewidth=5)
-        plt.plot(t, ySPMaxDen[1], label='Limites de SetPoint', linestyle='--', color='k', linewidth=5)
-        plt.plot(t, ySPMinDen[1], linestyle='--', color='k', linewidth=5)
         plt.ylabel(r'Vazão Mássica / kg/s')
         plt.xlabel('Tempo / h')
         plt.grid(True)
@@ -288,6 +297,7 @@ class EMPC:
         plt.figure(figsize=(20, 12))
         plt.plot(t, P, label='Pressão no final do duto / kPa', linewidth=5)
         plt.plot(t, ySPMaxDen[2], label='Limites de SetPoint', linestyle='--', color='k', linewidth=5)
+        plt.plot(t, ySPDen[2], label='SetPoint', linestyle='--', color='r', linewidth=5)
         plt.plot(t, ySPMinDen[2], linestyle='--', color='k', linewidth=5)
         plt.ylabel('Pressão no final do duto / kPa')
         plt.xlabel('Tempo / h')
@@ -321,22 +331,19 @@ if __name__ == "__main__":
     # Configurações do Controlador:
     p = 15 # Horizonte de Predição
     m = 5 # Horizonte de Controle
-    Q = np.diag([0,0,75,0]) # Peso das Saídas
+    Q = np.diag([0,0,100,0]) # Peso das Saídas
     R = np.diag([50]) # Peso das Entradas
     gamma = 0.01 # Peso da Parcela Econômica
-    iter = 480 # Pontos para simulação do controlador
+    iter = 120 # Pontos para simulação do controlador
 
     # Mudança nas restrições do set point (DEVE SER DEFINIDA ANTES DE TENTAR CARREGAR)
     yspMaxList = np.ones((p*model.nY, iter))/5
-    yspMinList = -np.ones((p*model.nY, iter))/20
+    yspMinList = -np.ones((p*model.nY, iter))/10
 
-    # for i in range(iter):
-    #     yspMaxList[3::model.nY, i] = -1
-    #     yspMinList[3::model.nY, i] = -1
-    #     if i > 6 and i <= 30:
-    #         yspMinList[2::model.nY, i] = 0.1
-    #     if i > 36 and i <= 66:
-    #         yspMaxList[1::model.nY, i] = 0.1
+    for i in range(iter):
+        yspMinList[2::model.nY, i] = -0.075
+        if i > 240/4 and i <= 360/4:
+            yspMinList[2::model.nY, i] = 0.1
     
     EMPC = EMPC(model, p, m, Q, R, gamma)
 
