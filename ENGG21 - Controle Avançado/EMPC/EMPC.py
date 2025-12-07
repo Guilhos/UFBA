@@ -77,11 +77,14 @@ class EMPC:
         self.L = np.kron(np.ones((self.p, 1)), np.array([[0],[0],[0],[1]]))
         self.gamma = np.array([self.gamma]).reshape(-1,1)
 
+        ## Esp
+        self.Esp = np.array([-1]).reshape(-1,1)
+
         ## F
         ### Como a matriz leva x_k dentro dela, ela esta ja dentro do proprio MPC
 
         ## Hessiana
-        self.H = np.block([[self.thetaX.T @ self.Qtil @ self.thetaX + self.Rtil + self.thetaX.T @ self.L @ self.gamma @ self.L.T @ self.thetaX, (- self.Qtil @ self.thetaX).T],
+        self.H = np.block([[self.thetaX.T @ self.Qtil @ self.thetaX + self.Rtil + self.thetaX.T @ self.L @ self.gamma @ self.L.T @ self.thetaX, - self.thetaX.T @ self.Qtil],
                             [- self.Qtil @ self.thetaX, self.Qtil ]])
         self.H = (self.H + self.H.T)/2
 
@@ -140,6 +143,7 @@ class EMPC:
         self.ysp_value = np.zeros((self.p*self.model.nY, iter))
         deltaU_mpc = np.zeros((self.model.nU, iter))
         self.y_value = np.zeros((self.model.nY, iter))
+        self.y_mpc_value = np.zeros((self.model.nY, iter))
         self.u_value = np.zeros((self.model.nU, iter))
         
         # Loop do EMPC
@@ -151,7 +155,8 @@ class EMPC:
 
             ## Criação do problema de otimização
             Z = cp.Variable((self.m*self.model.nU + self.p*self.model.nY,1))
-            cost = cp.quad_form(Z,self.H) + 2 * np.block([[x_k.T @ self.psi.T @ self.Qtil @ self.thetaX + x_k.T @ self.psi.T @ self.L @ self.gamma @ self.L.T @ self.thetaX + self.gamma @ self.L.T @ self.thetaX, - x_k.T @ self.psi.T @ self.Qtil ]]) @ Z
+            F = np.block([[x_k.T @ self.psi.T @ self.Qtil @ self.thetaX + x_k.T @ self.psi.T @ self.L @ self.gamma @ self.L.T @ self.thetaX - self.Esp @ self.gamma @ self.L.T @ self.thetaX, - x_k.T @ self.psi.T @ self.Qtil ]])
+            cost = cp.quad_form(Z,self.H) + 2 * F @ Z
             constraints = [self.G @ Z <= self.S @ x_k + w]
             prob = cp.Problem(cp.Minimize(cost), constraints)
             # Desabilitando verbose para maior velocidade, habilite se necessário
@@ -187,6 +192,7 @@ class EMPC:
             ## Passo a frente no modelo
             x_mpc = self.Atil @ x_k + self.Btil @ deltaU_mpc[:,k].reshape(-1,1)
             y_mpc = self.Ctil @ x_k + self.Dtil @ deltaU_mpc[:,k].reshape(-1,1)
+            self.y_mpc_value[:,k] = y_mpc.flatten()
 
             ## Estimação de estados com filtro de Kalman
             x_k = x_mpc + KF @ (self.model.normalize(self.y_value[:,k], 'y') - y_mpc)
@@ -195,17 +201,35 @@ class EMPC:
         self.save_results()
         print(f'Resultados salvos em: {self.results_path}')
 
-    def kalmanFilter(self, iter = 100):
-        covMedido = .25
-        covSistema = .75
+    def kalmanFilter(self, iter = 10000):
+        covMedido = .9
+        covSistema = .1
         sM = self.Atil.shape
         PP = np.eye(sM[1])
         VV = np.eye(self.model.nY)*covMedido
         WW = np.eye(sM[1])*covSistema
         for i in range(iter):
-            PP = self.Atil @ PP @ self.Atil.T - self.Atil @ PP @ self.Ctil.T @ np.linalg.inv(VV + self.Ctil @ PP @ self.Ctil.T) @ self.Ctil @ PP @ self.Atil.T + WW
+            # 1. Cálculo da Inovação Covariância (S)
+            S = VV + self.Ctil @ PP @ self.Ctil.T
+            
+            # 2. Cálculo do Ganho de Kalman (K_F)
+            # K_F = A*P*C^T * inv(S)
+            KF_k = self.Atil @ PP @ self.Ctil.T @ np.linalg.inv(S)
+            
+            # 3. Atualização da Covariância P (P_next = A * P * A^T - K_F * S * K_F^T + W)
+            # Usando P_next = A * (P - K_F * C * P) * A^T + W é mais estável
+            
+            # Pk_corrected = Pk - Pk * C^T * S^-1 * C * Pk
+            P_k_corrected = PP - PP @ self.Ctil.T @ np.linalg.inv(S) @ self.Ctil @ PP
+            
+            # P_next = A @ P_corrected @ A^T + W
+            PP = self.Atil @ P_k_corrected @ self.Atil.T + WW
         
-        return self.Atil @ PP @ self.Ctil.T @ np.linalg.inv(VV + self.Ctil @ PP @ self.Ctil.T)
+        # O ganho de Kalman retornado deve ser o ganho do último passo (K_F_final)
+        S_final = VV + self.Ctil @ PP @ self.Ctil.T
+        KF_final = self.Atil @ PP @ self.Ctil.T @ np.linalg.inv(S_final)
+        
+        return KF_final
 
     def save_results(self):
         """Salva as variáveis de plotagem em um arquivo pickle."""
@@ -262,10 +286,12 @@ class EMPC:
         ySPMaxDen = np.zeros((self.model.nY, self.iter))
         ySPMinDen = np.zeros((self.model.nY, self.iter))
         ySPDen = np.zeros((self.model.nY, self.iter))
+        ympcDen = np.zeros((self.model.nY, self.iter))
         for i in range(self.iter):
             ySPMaxDen[:,i] = self.model.denormalize(self.yspMaxList[:self.model.nY, i], 'y').flatten()
             ySPMinDen[:,i] = self.model.denormalize(self.yspMinList[:self.model.nY, i], 'y').flatten()
             ySPDen[:,i] = self.model.denormalize(self.ysp_value[:self.model.nY, i], 'y').flatten()
+            ympcDen[:,i] = self.model.denormalize(self.y_mpc_value[:, i], 'y').flatten()
 
         T2 = self.y_value[0]
         m_dot = self.y_value[1]
@@ -278,6 +304,7 @@ class EMPC:
 
         plt.figure(figsize=(20, 12))
         plt.plot(t, T2, label='Temperatura na saída do compressor / K', linewidth=5)
+        plt.plot(t, ympcDen[0], color = 'g')
         plt.ylabel('Temperatura na saída do compressor / K')
         plt.xlabel('Tempo / h')
         plt.grid(True)
@@ -287,6 +314,7 @@ class EMPC:
 
         plt.figure(figsize=(20, 12))
         plt.plot(t, m_dot, label=r'Vazão Mássica / kg/s', linewidth=5)
+        plt.plot(t, ympcDen[1], color = 'g')
         plt.ylabel(r'Vazão Mássica / kg/s')
         plt.xlabel('Tempo / h')
         plt.grid(True)
@@ -298,6 +326,7 @@ class EMPC:
         plt.plot(t, P, label='Pressão no final do duto / kPa', linewidth=5)
         plt.plot(t, ySPMaxDen[2], label='Limites de SetPoint', linestyle='--', color='k', linewidth=5)
         plt.plot(t, ySPDen[2], label='SetPoint', linestyle='--', color='r', linewidth=5)
+        plt.plot(t, ympcDen[2], color = 'g')
         plt.plot(t, ySPMinDen[2], linestyle='--', color='k', linewidth=5)
         plt.ylabel('Pressão no final do duto / kPa')
         plt.xlabel('Tempo / h')
@@ -308,6 +337,7 @@ class EMPC:
 
         plt.figure(figsize=(20, 12))
         plt.plot(t, W, label='Potência do Compressor / kWh', linewidth=5)
+        plt.plot(t, ympcDen[3], color = 'g')
         plt.ylabel('Potência do Compressor / kWh')
         plt.xlabel('Tempo / h')
         plt.grid(True)
@@ -331,10 +361,10 @@ if __name__ == "__main__":
     # Configurações do Controlador:
     p = 15 # Horizonte de Predição
     m = 5 # Horizonte de Controle
-    Q = np.diag([0,0,100,0]) # Peso das Saídas
-    R = np.diag([50]) # Peso das Entradas
+    Q = np.diag([0,0,1000,0]) # Peso das Saídas
+    R = np.diag([10]) # Peso das Entradas
     gamma = 0.01 # Peso da Parcela Econômica
-    iter = 120 # Pontos para simulação do controlador
+    iter = 60 # Pontos para simulação do controlador
 
     # Mudança nas restrições do set point (DEVE SER DEFINIDA ANTES DE TENTAR CARREGAR)
     yspMaxList = np.ones((p*model.nY, iter))/5
@@ -342,8 +372,10 @@ if __name__ == "__main__":
 
     for i in range(iter):
         yspMinList[2::model.nY, i] = -0.075
-        if i > 240/4 and i <= 360/4:
-            yspMinList[2::model.nY, i] = 0.1
+        if i > 20 and i <= 40:
+            yspMinList[2::model.nY, i] = 0
+        # if i > 168 and i <= 210:
+        #     yspMinList[2::model.nY, i] = 0.05s
     
     EMPC = EMPC(model, p, m, Q, R, gamma)
 
