@@ -9,13 +9,13 @@ import pickle
 # --- CONFIGURAÇÃO GLOBAL DE FONTE ---
 # Mantendo o tamanho global grande para eixos e títulos, 
 # reduziremos manualmente na legenda dentro da função de plotagem.
-plt.rcParams.update({'font.size': 30})
-plt.rcParams.update({'axes.titlesize': 30})
-plt.rcParams.update({'axes.labelsize': 30})
-plt.rcParams.update({'xtick.labelsize': 30})
-plt.rcParams.update({'ytick.labelsize': 30})
-plt.rcParams.update({'legend.fontsize': 30}) 
-plt.rcParams.update({'figure.titlesize': 26})
+plt.rcParams.update({'font.size': 35})
+plt.rcParams.update({'axes.titlesize': 35})
+plt.rcParams.update({'axes.labelsize': 35})
+plt.rcParams.update({'xtick.labelsize': 35})
+plt.rcParams.update({'ytick.labelsize': 35})
+plt.rcParams.update({'legend.fontsize': 35}) 
+plt.rcParams.update({'figure.titlesize': 35})
 
 class EMPC:
     def __init__(self, model, p, m, Q, R, gamma):
@@ -127,9 +127,9 @@ class EMPC:
         KF = self.kalmanFilter()
 
         ## Upper & Lower Bounds
-        uMax = np.tile(np.array([[0.55]]).reshape(-1,1), (self.m,1))
+        uMax = np.tile(np.array([[0.43]]).reshape(-1,1), (self.m,1))
         uMin = np.tile(-np.array([[0.2]]).reshape(-1,1), (self.m,1))
-        dUMax = np.tile(np.ones((self.model.nU,1))/10, (self.m,1))
+        dUMax = np.tile(np.ones((self.model.nU,1))/20, (self.m,1))
 
         w = np.block([[self.yspMaxList[:,0].reshape(-1,1)],
                       [-self.yspMinList[:,0].reshape(-1,1)],
@@ -180,13 +180,13 @@ class EMPC:
 
             ## Passo na planta
             u_plant = u_plant + self.model.u_ss * deltaU_mpc[:,k].reshape(-1,1)
-            resPlant = plant.run(x_plant.flatten(), z_plant.flatten(), u_plant.flatten())
-            for i in range(plant.sistema.n_points):
-                x_plant[i*3:(i+1)*3] = np.array([resPlant['T_sol'][:,i], resPlant['V_sol'][:,i], resPlant['w_sol'][:,i]])
-            z_plant = resPlant['z_sol'].T
+            # resPlant = plant.run(x_plant.flatten(), z_plant.flatten(), u_plant.flatten())
+            # for i in range(plant.sistema.n_points):
+            #     x_plant[i*3:(i+1)*3] = np.array([resPlant['T_sol'][:,i], resPlant['V_sol'][:,i], resPlant['w_sol'][:,i]])
+            # z_plant = resPlant['z_sol'].T
             
             # Matrizes de visualização
-            self.y_value[:,k] = np.array([resPlant["T_sol"][:,0], resPlant["z10"], resPlant["z11"], resPlant["potencia"]]).flatten()
+            # self.y_value[:,k] = np.array([resPlant["T_sol"][:,0], resPlant["z10"], resPlant["z11"], resPlant["potencia"]]).flatten()
             self.u_value[:,k] = u_plant.flatten() 
 
             ## Passo a frente no modelo
@@ -195,7 +195,7 @@ class EMPC:
             self.y_mpc_value[:,k] = y_mpc.flatten()
 
             ## Estimação de estados com filtro de Kalman
-            x_k = x_mpc + KF @ (self.model.normalize(self.y_value[:,k], 'y') - y_mpc)
+            x_k = x_mpc #+ KF @ (self.model.normalize(self.y_value[:,k], 'y') - y_mpc)
         
         print('Simulação concluída.')
         self.save_results()
@@ -239,6 +239,8 @@ class EMPC:
             'u_value': self.u_value,
             'yspMaxList': self.yspMaxList,
             'yspMinList': self.yspMinList,
+            'ysp_value': self.ysp_value,
+            'y_mpc_value': self.y_mpc_value,
             'dt': self.model.dt,
         }
         output_dir = os.path.dirname(self.results_path)
@@ -263,6 +265,8 @@ class EMPC:
                 self.u_value = data['u_value']
                 self.yspMaxList = data['yspMaxList']
                 self.yspMinList = data['yspMinList']
+                self.ysp_value = data['ysp_value']
+                self.y_mpc_value = data['y_mpc_value']
                 print(f'Resultados carregados com sucesso de: {self.results_path}')
                 return True
             else:
@@ -304,26 +308,26 @@ class EMPC:
 
         plt.figure(figsize=(20, 12))
         plt.plot(t, T2, label='Temperatura na saída do compressor / K', linewidth=5)
-        plt.plot(t, ympcDen[0], color = 'g')
+        #plt.plot(t, ympcDen[0], color = 'g')
         plt.ylabel('Temperatura na saída do compressor / K')
         plt.xlabel('Tempo / h')
         plt.grid(True)
-        plt.legend(loc='lower center', bbox_to_anchor=(0.5, -0.3), ncol=2, fancybox=True, shadow=True, fontsize=24)
+        plt.legend(loc='lower center', bbox_to_anchor=(0.5, -0.3), ncol=2, fancybox=True, shadow=True, fontsize=35)
         plt.tight_layout(rect=[0, 0, 1, 1])
         plt.savefig(os.path.join(output_dir, 'EMPC_y0_temperaturaCompressor.png'))
 
         plt.figure(figsize=(20, 12))
         plt.plot(t, m_dot, label=r'Vazão Mássica / kg/s', linewidth=5)
-        plt.plot(t, ympcDen[1], color = 'g')
+        #plt.plot(t, ympcDen[1], color = 'g')
         plt.ylabel(r'Vazão Mássica / kg/s')
         plt.xlabel('Tempo / h')
         plt.grid(True)
-        plt.legend(loc='lower center', bbox_to_anchor=(0.5, -0.3), ncol=2, fancybox=True, shadow=True, fontsize=24)
+        plt.legend(loc='lower center', bbox_to_anchor=(0.5, -0.3), ncol=2, fancybox=True, shadow=True, fontsize=35)
         plt.tight_layout(rect=[0, 0, 1, 1])
         plt.savefig(os.path.join(output_dir, 'EMPC_y1_vazaoMassica.png'))
 
         plt.figure(figsize=(20, 12))
-        plt.plot(t, P, label='Pressão no final do duto / kPa', linewidth=5)
+        #plt.plot(t, P, label='Pressão no final do duto / kPa', linewidth=5)
         plt.plot(t, ySPMaxDen[2], label='Limites de SetPoint', linestyle='--', color='k', linewidth=5)
         plt.plot(t, ySPDen[2], label='SetPoint', linestyle='--', color='r', linewidth=5)
         plt.plot(t, ympcDen[2], color = 'g')
@@ -331,17 +335,17 @@ class EMPC:
         plt.ylabel('Pressão no final do duto / kPa')
         plt.xlabel('Tempo / h')
         plt.grid(True)
-        plt.legend(loc='lower center', bbox_to_anchor=(0.5, -0.3), ncol=2, fancybox=True, shadow=True, fontsize=24)
+        plt.legend(loc='lower center', bbox_to_anchor=(0.5, -0.3), ncol=2, fancybox=True, shadow=True, fontsize=35)
         plt.tight_layout(rect=[0, 0, 1, 1])
         plt.savefig(os.path.join(output_dir, 'EMPC_y2_pressaoDuto.png'))
 
         plt.figure(figsize=(20, 12))
         plt.plot(t, W, label='Potência do Compressor / kWh', linewidth=5)
-        plt.plot(t, ympcDen[3], color = 'g')
+        #plt.plot(t, ympcDen[3], color = 'g')
         plt.ylabel('Potência do Compressor / kWh')
         plt.xlabel('Tempo / h')
         plt.grid(True)
-        plt.legend(loc='lower center', bbox_to_anchor=(0.5, -0.3), ncol=1, fancybox=True, shadow=True, fontsize=24)
+        plt.legend(loc='lower center', bbox_to_anchor=(0.5, -0.3), ncol=1, fancybox=True, shadow=True, fontsize=35)
         plt.tight_layout(rect=[0, 0, 1, 1])
         plt.savefig(os.path.join(output_dir, 'EMPC_y3_potencia.png'))
 
@@ -350,7 +354,7 @@ class EMPC:
         plt.ylabel('Vel. Rotação do Compressor / hz')
         plt.xlabel('Tempo / h')
         plt.grid(True)
-        plt.legend(loc='lower center', bbox_to_anchor=(0.5, -0.3), ncol=1, fancybox=True, shadow=True, fontsize=24)
+        plt.legend(loc='lower center', bbox_to_anchor=(0.5, -0.3), ncol=1, fancybox=True, shadow=True, fontsize=35)
         plt.tight_layout(rect=[0, 0, 1, 1])
         plt.savefig(os.path.join(output_dir, 'EMPC_u0_rotação.png'))
 
@@ -359,28 +363,28 @@ if __name__ == "__main__":
     model = model2ss.linDiscretizeComp()
 
     # Configurações do Controlador:
-    p = 15 # Horizonte de Predição
-    m = 5 # Horizonte de Controle
-    Q = np.diag([0,0,1000,0]) # Peso das Saídas
-    R = np.diag([10]) # Peso das Entradas
-    gamma = 0.01 # Peso da Parcela Econômica
-    iter = 60 # Pontos para simulação do controlador
+    p = 10 # Horizonte de Predição
+    m = 3 # Horizonte de Controle
+    Q = np.diag([0,0,50,0]) # Peso das Saídas
+    R = np.diag([1]) # Peso das Entradas
+    gamma = 25 # Peso da Parcela Econômica
+    iter = 60*6 # Pontos para simulação do controlador
 
     # Mudança nas restrições do set point (DEVE SER DEFINIDA ANTES DE TENTAR CARREGAR)
-    yspMaxList = np.ones((p*model.nY, iter))/5
+    yspMaxList = np.ones((p*model.nY, iter))/6
     yspMinList = -np.ones((p*model.nY, iter))/10
 
     for i in range(iter):
-        yspMinList[2::model.nY, i] = -0.075
-        if i > 20 and i <= 40:
-            yspMinList[2::model.nY, i] = 0
-        # if i > 168 and i <= 210:
-        #     yspMinList[2::model.nY, i] = 0.05s
+        yspMinList[2::model.nY, i] = -0.05
+        if i > 6*12.5 and i <= 6*40:
+            yspMinList[2::model.nY, i] = 0.0
+        if i > 6*25 and i <= 6*40:
+            yspMinList[2::model.nY, i] = 0.05
     
     EMPC = EMPC(model, p, m, Q, R, gamma)
 
     # Tenta carregar resultados salvos. Se falhar, roda a simulação.
-    if not EMPC.load_results(yspMaxList, yspMinList):
-        EMPC.run(model.plant, iter, yspMaxList, yspMinList)
+    #if not EMPC.load_results(yspMaxList, yspMinList):
+    EMPC.run(model.plant, iter, yspMaxList, yspMinList)
         
     EMPC.plot()
